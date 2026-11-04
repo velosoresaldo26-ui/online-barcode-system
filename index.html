@@ -1,0 +1,697 @@
+<!doctype html>
+<html lang="fil">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Property Sticker System</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: header + stats, scan bar, sticker/barcode preview, add form, property log, settings. Sticker is always paper-white. */
+:root {
+  --bg: #f1f4f6;
+  --surface: #ffffff;
+  --ink: #12181f;
+  --muted: #5a6672;
+  --line: #d8dee4;
+  --accent: #0b6e63;
+  --accent-ink: #ffffff;
+  --accent-soft: #dff1ee;
+  --danger: #b3261e;
+  --danger-soft: #fbe6e4;
+  --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1317; --surface: #161d23; --ink: #e8edf1; --muted: #8d99a4; --line: #26323b;
+    --accent: #3cc2ac; --accent-ink: #06231e; --accent-soft: #14312c;
+    --danger: #ff8a80; --danger-soft: #3a1d1b; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1317; --surface: #161d23; --ink: #e8edf1; --muted: #8d99a4; --line: #26323b;
+  --accent: #3cc2ac; --accent-ink: #06231e; --accent-soft: #14312c;
+  --danger: #ff8a80; --danger-soft: #3a1d1b; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 15px/1.5 var(--font-body);
+  padding-block: 0 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: 16px; }
+
+.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px 32px; padding-top: 28px; }
+.brand h1 { margin: 0; font: 700 clamp(30px, 6vw, 44px)/1 var(--font-display); text-transform: uppercase; letter-spacing: .04em; }
+.brand p { margin: 6px 0 0; color: var(--muted); }
+.stats { display: flex; flex-wrap: wrap; gap: 12px; }
+.stat { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding: 10px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+.stat span { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.stat b { font: 500 18px/1.2 var(--font-mono); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.strip { height: 10px; border-radius: 2px; opacity: .9;
+  background: repeating-linear-gradient(90deg, var(--ink) 0 2px, transparent 2px 5px, var(--ink) 5px 9px, transparent 9px 11px, var(--ink) 11px 12px, transparent 12px 16px, var(--ink) 16px 19px, transparent 19px 22px); }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 20px; min-width: 0; }
+.card h2 { margin: 0 0 14px; font: 600 22px/1.1 var(--font-display); letter-spacing: .05em; text-transform: uppercase; }
+.two { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 900px) { .two { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); } }
+
+/* Scan bar */
+.scan { border-color: var(--accent); border-width: 2px; }
+.scanrow { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.scanrow input { flex: 1 1 280px; font: 500 20px var(--font-mono); padding: 14px 16px; }
+.scanmsg { margin: 10px 0 0; font-size: 14px; min-height: 1.5em; color: var(--muted); }
+.scanmsg.ok { color: var(--accent); font-weight: 600; }
+.scanmsg.bad { color: var(--danger); font-weight: 600; }
+.check { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.check input { width: auto; flex: none; }
+
+/* Forms */
+form { display: grid; gap: 12px; }
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.field label { font-size: 13px; font-weight: 500; color: var(--muted); }
+.row2 { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.row3 { display: grid; gap: 12px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 520px) { .row2, .row3 { grid-template-columns: minmax(0, 1fr); } }
+input, select, textarea { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 9px 11px; min-width: 0; width: 100%; }
+textarea { resize: vertical; min-height: 64px; }
+input.mono { font-family: var(--font-mono); }
+input:focus-visible, select:focus-visible, button:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button { font: 500 14px/1 var(--font-body); cursor: pointer; border-radius: 6px; padding: 10px 14px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+button:hover { border-color: var(--muted); }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); padding: 12px 16px; font-size: 15px; font-weight: 600; }
+button.primary:hover { filter: brightness(1.08); }
+button.danger { color: var(--danger); }
+button.danger:hover { background: var(--danger-soft); border-color: var(--danger); }
+button.small { padding: 6px 10px; font-size: 13px; }
+.hint { margin: 0; font-size: 13px; color: var(--muted); }
+.error { margin: 0; font-size: 13px; color: var(--danger); }
+.btns { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* Preview */
+.previewbox { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; }
+.paper { background: #ffffff; border: 1px solid var(--line); border-radius: 6px; padding: 14px; overflow-x: auto; max-width: 100%; }
+.paper .emptymsg { margin: 0; color: #5a6672; padding: 24px; }
+.sidecol { display: grid; gap: 10px; justify-items: start; min-width: 0; }
+.labelpaper { text-align: center; }
+.labelpaper img { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+
+/* The sticker (always black on white, like paper) */
+.sticker { background: #fff; color: #000; font-family: Arial, Helvetica, sans-serif; width: 16cm; font-size: .31cm; line-height: 1.25; }
+.sticker table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.sticker table.st { border: 1px solid #000; }
+.sticker td { padding: .12em .4em; vertical-align: middle; border: 1px solid #000; overflow-wrap: anywhere; }
+.sticker td.l1, .sticker td.l2, .sticker td.l3, .sticker td.logo { border: 0; }
+.sticker td.l1 { font-size: 1em; }
+.sticker td.l2 { font-weight: 700; font-size: 1.05em; }
+.sticker td.l3 { text-align: center; font-weight: 700; font-size: 1.05em; border-bottom: 1px solid #000; }
+.sticker td.logo { text-align: center; border-bottom: 1px solid #000; padding: .2em; }
+.sticker td.logo img { max-width: 100%; max-height: 3.2em; display: block; margin: 0 auto; }
+.sticker td.logo span { font-size: .8em; color: #666; }
+.sticker td.lab, .sticker td.lab2 { text-align: right; white-space: nowrap; }
+.sticker td.lab2 { text-align: left; }
+.sticker td.b { font-weight: 700; }
+.sticker td.ctr { text-align: center; }
+.sticker table.sig td { border: 0; text-align: center; padding-top: .3em; padding-bottom: 0; }
+.sticker table.sig tr:first-child td { font-weight: 700; border-bottom: 1px solid #000; padding-bottom: .1em; }
+.sticker table.sig tr:last-child td { padding-top: .1em; }
+.sticker .note { text-align: center; color: #d00000; margin: .15em 0 0; }
+.sticker .warn { text-align: center; font-style: italic; margin: 0 0 .2em; border-bottom: 1px solid #000; padding-bottom: .15em; }
+.sticker .box { border: 1px solid #000; border-top: 0; }
+
+/* List */
+.listhead { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.listhead h2 { margin: 0; }
+.tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.tools input[type="search"] { width: 220px; }
+.confirm { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--danger); }
+.note2 { margin: 0 0 12px; padding: 8px 12px; background: var(--accent-soft); border-radius: 6px; font-size: 13px; }
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+table.list { width: 100%; border-collapse: collapse; min-width: 760px; }
+table.list th, table.list td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.list th { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 500; background: var(--bg); }
+table.list tbody tr:last-child td { border-bottom: 0; }
+table.list tr.sel { background: var(--accent-soft); }
+td.pno { font: 500 14px var(--font-mono); white-space: nowrap; }
+td.art { max-width: 340px; overflow-wrap: anywhere; }
+td.acts { white-space: nowrap; text-align: right; }
+td.acts button + button { margin-left: 6px; }
+.tag { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; background: var(--accent-soft); color: var(--accent); padding: 2px 6px; border-radius: 4px; margin-left: 8px; }
+.none { padding: 28px 12px; text-align: center; color: var(--muted); }
+textarea#csvOut { width: 100%; min-height: 140px; margin-top: 12px; font: 13px/1.5 var(--font-mono); }
+
+details.card summary { cursor: pointer; font: 600 22px/1.1 var(--font-display); letter-spacing: .05em; text-transform: uppercase; }
+details.card[open] summary { margin-bottom: 14px; }
+.logorow { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.logorow img { height: 48px; width: auto; background: #fff; border-radius: 4px; padding: 2px; }
+
+#toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(20px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 8px; font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .2s; max-width: calc(100% - 32px); z-index: 20; }
+#toast.on { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { #toast { transition: none; } }
+
+/* Printing: only the chosen paper is printed */
+@media print {
+  @page { margin: 8mm; }
+  html, body { background: #fff !important; padding: 0 !important; }
+  body * { visibility: hidden !important; }
+  body.print-sticker #stickerPaper, body.print-sticker #stickerPaper *,
+  body.print-barcode #labelPaper, body.print-barcode #labelPaper * { visibility: visible !important; }
+  body.print-sticker #stickerPaper, body.print-barcode #labelPaper {
+    position: absolute; left: 0; top: 0; border: 0 !important; padding: 0 !important; overflow: visible !important;
+  }
+  #toast { display: none; }
+}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>Property Sticker System</h1>
+      <p>I-scan ang barcode ng property. Lalabas ang Property Inventory Sticker na handa nang i-print.</p>
+    </div>
+    <div class="stats">
+      <div class="stat"><span>Kabuuang property</span><b id="stTotal">0</b></div>
+      <div class="stat"><span>Susunod na Property No.</span><b id="stNext">-</b></div>
+    </div>
+  </header>
+  <div class="strip" aria-hidden="true"></div>
+
+  <section class="card scan" aria-labelledby="hScan">
+    <h2 id="hScan">I-scan ang barcode</h2>
+    <div class="scanrow">
+      <input id="scan" class="mono" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="I-click dito, tapos i-scan ang barcode" aria-label="I-scan ang barcode ng Property No.">
+      <button type="button" class="primary" id="scanGo">Hanapin</button>
+    </div>
+    <p class="scanmsg" id="scanMsg" role="status">Handa na. Ang barcode scanner ay mag-ta-type ng Property No. at mag-e-Enter nang kusa.</p>
+    <label class="check" style="margin-top:8px"><input type="checkbox" id="autoPrint"> Buksan agad ang print pagka-scan</label>
+  </section>
+
+  <section class="card" aria-labelledby="hPrev">
+    <h2 id="hPrev">Sticker at barcode label</h2>
+    <div class="previewbox">
+      <div class="sidecol" style="max-width:100%">
+        <div class="paper" id="stickerPaper"><p class="emptymsg" id="stickerEmpty">Wala pang napiling property. Mag-scan o pumili sa listahan.</p></div>
+        <div class="btns">
+          <button type="button" class="primary" id="printSticker" disabled>I-print ang sticker</button>
+        </div>
+      </div>
+      <div class="sidecol">
+        <div class="paper labelpaper" id="labelPaper"><p class="emptymsg" id="labelEmpty">Dito lalabas ang barcode label.</p></div>
+        <div class="btns">
+          <button type="button" id="printLabel" disabled>I-print ang barcode label</button>
+        </div>
+        <p class="hint" id="printHint">Ang pag-print ay gumagana kapag binuksan ang page sa sarili mong browser (GitHub Pages o ang file), hindi sa loob ng preview.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="two">
+    <section class="card" aria-labelledby="hAdd">
+      <h2 id="hAdd">Magdagdag ng property</h2>
+      <form id="propForm" autocomplete="off">
+        <div class="field">
+          <label for="fNo">Property No. (awtomatiko, pwedeng baguhin)</label>
+          <input id="fNo" class="mono" type="text" maxlength="40">
+        </div>
+        <div class="row2">
+          <div class="field"><label for="fLoc">Location</label><input id="fLoc" type="text" maxlength="80" placeholder="Hal. Procurement Section"></div>
+          <div class="field"><label for="fIcs">ICS</label><input id="fIcs" type="text" maxlength="30" placeholder="Hal. 179"></div>
+        </div>
+        <div class="field"><label for="fArt">Articles</label><textarea id="fArt" maxlength="400" placeholder="Hal. SYSTEM UNIT LITE X9 Series Micro ATX ID: ..." required></textarea></div>
+        <div class="row2">
+          <div class="field"><label for="fUser">End User</label><input id="fUser" type="text" maxlength="80"></div>
+          <div class="field"><label for="fAcc">Accountable Person</label><input id="fAcc" type="text" maxlength="80"></div>
+        </div>
+        <div class="field"><label for="fDate">Date Acquired</label><input id="fDate" type="date"></div>
+        <p class="error" id="formError" hidden></p>
+        <div class="btns">
+          <button class="primary" type="submit" id="saveBtn">Idagdag at gumawa ng barcode</button>
+          <button type="button" id="cancelEdit" hidden>Kanselahin ang pag-edit</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card" aria-labelledby="hList">
+      <div class="listhead">
+        <h2 id="hList">Listahan ng property</h2>
+        <div class="tools">
+          <input id="search" type="search" placeholder="Hanapin" aria-label="Hanapin ang property">
+        </div>
+      </div>
+      <p class="note2" id="exampleNote" hidden>Halimbawa ang unang item, galing sa sticker na ipinakita mo. Pwede mo itong burahin.</p>
+      <div class="tablewrap">
+        <table class="list">
+          <thead><tr><th>Property No.</th><th>Articles</th><th>Accountable</th><th></th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+      <div class="btns" style="margin-top:14px">
+        <button type="button" id="copyCsv">Kopyahin ang CSV</button>
+        <button type="button" id="importBtn">I-import ang CSV</button>
+        <input id="importFile" type="file" accept=".csv,text/csv" hidden>
+        <button type="button" class="danger" id="wipe">Burahin lahat</button>
+        <span class="confirm" id="wipeAsk" hidden>Sigurado ka ba?
+          <button type="button" class="small danger" id="wipeYes">Oo, burahin</button>
+          <button type="button" class="small" id="wipeNo">Hindi</button>
+        </span>
+      </div>
+      <p class="hint" style="margin-top:10px">Mga column ng CSV: property_no, location, articles, end_user, accountable_person, date_acquired, ics.</p>
+      <textarea id="csvOut" readonly hidden aria-label="CSV na kokopyahin"></textarea>
+    </section>
+  </div>
+
+  <details class="card">
+    <summary>Settings ng sticker</summary>
+    <form id="setForm" autocomplete="off" onsubmit="return false">
+      <div class="row2">
+        <div class="field"><label for="sLine1">Unang linya ng header</label><input id="sLine1" type="text" maxlength="100"></div>
+        <div class="field"><label for="sLine2">Pangalawang linya (bold)</label><input id="sLine2" type="text" maxlength="100"></div>
+      </div>
+      <div class="row3">
+        <div class="field"><label for="sSig0">COA Representative</label><input id="sSig0" type="text" maxlength="60"></div>
+        <div class="field"><label for="sSig1">Property Custodian</label><input id="sSig1" type="text" maxlength="60"></div>
+        <div class="field"><label for="sSig2">Inventory Representative</label><input id="sSig2" type="text" maxlength="60"></div>
+      </div>
+      <div class="row3">
+        <div class="field"><label for="sPrefix">Unahan ng Property No.</label><input id="sPrefix" class="mono" type="text" maxlength="24"></div>
+        <div class="field"><label for="sYear">Taon</label><input id="sYear" class="mono" type="text" maxlength="4" inputmode="numeric"></div>
+        <div class="field"><label for="sDigits">Haba ng bilang</label>
+          <select id="sDigits"><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label for="sWidth">Lapad ng sticker (cm)</label><input id="sWidth" type="number" min="8" max="20" step="0.5"></div>
+        <div class="field"><label for="sLogoFile">Logo (larawan)</label>
+          <div class="logorow"><input id="sLogoFile" type="file" accept="image/*"><img id="logoPrev" alt="Logo" hidden><button type="button" class="small" id="logoClear" hidden>Alisin</button></div></div>
+      </div>
+      <p class="hint">Awtomatikong nase-save ang mga pagbabago.</p>
+    </form>
+  </details>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.6/JsBarcode.all.min.js"></script>
+<script>
+(function () {
+  var KEY = 'property-sticker-system-v1';
+  var TITLES = ['COA Representative', 'Property Custodian', 'Inventory Representative'];
+  var state = {
+    settings: {
+      line1: 'Bangsamoro Autonomous Region in Muslim Mindanao',
+      line2: 'MINISTRY OF SCIENCE AND TECHNOLOGY',
+      sig: ['JEHAN C. SEBASTIAN', 'AISA R. BIANG', 'HAYDER . DUKAN'],
+      width: 16, autoPrint: true,
+      prefix: 'MOST-0101', year: String(new Date().getFullYear()), digits: 3, logo: ''
+    },
+    counters: {},
+    items: []
+  };
+  var selectedId = null, editingId = null, cache = {};
+
+  function $(id) { return document.getElementById(id); }
+  function h(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined && text !== null) e.textContent = text;
+    return e;
+  }
+
+  /* ---------- storage ---------- */
+  function load() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (!raw) return false;
+      var s = JSON.parse(raw);
+      if (!s || !Array.isArray(s.items)) return false;
+      state.items = s.items;
+      state.counters = s.counters || {};
+      if (s.settings) for (var k in s.settings) state.settings[k] = s.settings[k];
+      if (!Array.isArray(state.settings.sig) || state.settings.sig.length !== 3) state.settings.sig = ['', '', ''];
+      return true;
+    } catch (e) { return false; }
+  }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+
+  /* ---------- helpers ---------- */
+  var toastTimer;
+  function toast(msg) {
+    var t = $('toast'); t.textContent = msg; t.classList.add('on');
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.classList.remove('on'); }, 2400);
+  }
+  function copyText(text) {
+    try { return navigator.clipboard.writeText(text).then(function () { return true; }, function () { return false; }); }
+    catch (e) { return Promise.resolve(false); }
+  }
+  function pad(n, d) { var s = String(n); while (s.length < d) s = '0' + s; return s; }
+  function ctrKey() { return state.settings.prefix + '-' + state.settings.year; }
+  function nextNo() {
+    var n = (state.counters[ctrKey()] || 0) + 1;
+    return ctrKey() + '-' + pad(n, Number(state.settings.digits) || 3);
+  }
+  function bumpCounter(no) {
+    var m = /^(.*)-(\d{4})-(\d+)$/.exec(no);
+    if (!m) return;
+    var key = m[1] + '-' + m[2], n = parseInt(m[3], 10);
+    if (!(state.counters[key] >= n)) state.counters[key] = n;
+  }
+  function findByNo(no) {
+    var q = String(no).trim().toLowerCase();
+    for (var i = 0; i < state.items.length; i++) if (state.items[i].no.toLowerCase() === q) return state.items[i];
+    return null;
+  }
+  function findById(id) {
+    for (var i = 0; i < state.items.length; i++) if (state.items[i].id === id) return state.items[i];
+    return null;
+  }
+  function fmtDate(v) {
+    if (!v) return '';
+    var d = new Date(v + 'T00:00:00');
+    if (isNaN(d.getTime())) return v;
+    try { return d.toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' }); } catch (e) { return v; }
+  }
+  function barcodeURL(code) {
+    if (cache[code] !== undefined) return cache[code];
+    try {
+      var c = document.createElement('canvas');
+      JsBarcode(c, code, { format: 'CODE128', width: 2.4, height: 80, displayValue: true, margin: 10,
+        background: '#ffffff', lineColor: '#000000', fontSize: 16, font: 'monospace' });
+      cache[code] = c.toDataURL('image/png');
+    } catch (e) { cache[code] = ''; }
+    return cache[code];
+  }
+
+  /* ---------- sticker ---------- */
+  function td(cls, text, attrs) {
+    var e = h('td', cls, text);
+    if (attrs) for (var k in attrs) e[k] = attrs[k];
+    return e;
+  }
+  function buildSticker(it) {
+    var s = state.settings;
+    var root = h('div', 'sticker');
+    root.style.width = s.width + 'cm';
+    root.style.fontSize = (s.width / 52) + 'cm';
+
+    var t = h('table', 'st');
+    var cg = document.createElement('colgroup');
+    ['17%', '31%', '20%', '32%'].forEach(function (w) { var c = document.createElement('col'); c.style.width = w; cg.appendChild(c); });
+    t.appendChild(cg);
+
+    var r1 = h('tr'), logo = td('logo', null, { rowSpan: 3 });
+    if (s.logo) { var im = document.createElement('img'); im.src = s.logo; im.alt = 'Logo'; logo.appendChild(im); }
+    else { logo.appendChild(h('span', null, 'LOGO')); }
+    r1.appendChild(logo); r1.appendChild(td('l1', s.line1, { colSpan: 3 })); t.appendChild(r1);
+    var r2 = h('tr'); r2.appendChild(td('l2', s.line2, { colSpan: 3 })); t.appendChild(r2);
+    var r3 = h('tr'); r3.appendChild(td('l3', 'PROPERTY INVENTORY STICKER', { colSpan: 3 })); t.appendChild(r3);
+
+    var r4 = h('tr');
+    r4.appendChild(td('lab', 'Location:')); r4.appendChild(td('b', it.location));
+    r4.appendChild(td('lab2', 'Property No.:')); r4.appendChild(td('b', it.no)); t.appendChild(r4);
+    var r5 = h('tr'); r5.appendChild(td('lab', 'Articles:')); r5.appendChild(td('b', it.articles, { colSpan: 3 })); t.appendChild(r5);
+    var r6 = h('tr');
+    r6.appendChild(td('lab', 'End User:')); r6.appendChild(td('', it.endUser));
+    r6.appendChild(td('lab2', 'Accountable Person:')); r6.appendChild(td('b', it.accountable)); t.appendChild(r6);
+    var r7 = h('tr');
+    r7.appendChild(td('lab', 'Date Acquired:')); r7.appendChild(td('', fmtDate(it.dateAcquired)));
+    r7.appendChild(td('b ctr', 'ICS')); r7.appendChild(td('b ctr', it.ics)); t.appendChild(r7);
+    root.appendChild(t);
+
+    var box = h('div', 'box');
+    var sig = h('table', 'sig');
+    var cg2 = document.createElement('colgroup');
+    for (var i = 0; i < 3; i++) cg2.appendChild(document.createElement('col'));
+    sig.appendChild(cg2);
+    var a = h('tr'), b = h('tr');
+    for (var j = 0; j < 3; j++) { a.appendChild(td('', s.sig[j])); b.appendChild(td('', TITLES[j])); }
+    sig.appendChild(a); sig.appendChild(b);
+    box.appendChild(sig);
+    box.appendChild(h('p', 'note', 'Note: PLEASE DO NOT REMOVE'));
+    box.appendChild(h('p', 'warn', 'Unauthorized removal or tampering will be subject to disciplinary action.'));
+    root.appendChild(box);
+    return root;
+  }
+
+  function renderPreview() {
+    var it = findById(selectedId);
+    var sp = $('stickerPaper'), lp = $('labelPaper');
+    sp.textContent = ''; lp.textContent = '';
+    if (!it) {
+      sp.appendChild(h('p', 'emptymsg', 'Wala pang napiling property. Mag-scan o pumili sa listahan.'));
+      lp.appendChild(h('p', 'emptymsg', 'Dito lalabas ang barcode label.'));
+    } else {
+      sp.appendChild(buildSticker(it));
+      var url = barcodeURL(it.no);
+      if (url) { var im = document.createElement('img'); im.src = url; im.alt = 'Barcode ' + it.no; lp.appendChild(im); }
+      else lp.appendChild(h('p', 'emptymsg', it.no));
+    }
+    $('printSticker').disabled = !it; $('printLabel').disabled = !it;
+  }
+
+  function doPrint(mode) {
+    document.body.classList.remove('print-sticker', 'print-barcode');
+    document.body.classList.add(mode === 'label' ? 'print-barcode' : 'print-sticker');
+    setTimeout(function () { try { window.print(); } catch (e) {} }, 60);
+  }
+  window.addEventListener('afterprint', function () {
+    document.body.classList.remove('print-sticker', 'print-barcode');
+  });
+
+  /* ---------- list ---------- */
+  function renderRows() {
+    var q = $('search').value.trim().toLowerCase();
+    var tb = $('rows'); tb.textContent = '';
+    var list = state.items.slice().reverse().filter(function (it) {
+      return !q || (it.no + ' ' + it.articles + ' ' + it.accountable + ' ' + it.location + ' ' + it.endUser).toLowerCase().indexOf(q) !== -1;
+    });
+    if (!list.length) {
+      var tr0 = h('tr'), c0 = td('none', state.items.length ? 'Walang tugma sa hinahanap mo.' : 'Wala pang property. Magdagdag gamit ang form.', { colSpan: 4 });
+      tr0.appendChild(c0); tb.appendChild(tr0);
+    }
+    list.forEach(function (it) {
+      var tr = h('tr'); if (it.id === selectedId) tr.className = 'sel';
+      var c1 = h('td', 'pno', it.no);
+      if (it.example) c1.appendChild(h('span', 'tag', 'halimbawa'));
+      var c2 = h('td', 'art', it.articles);
+      var c3 = h('td', null, it.accountable);
+      var c4 = h('td', 'acts');
+      var bS = h('button', 'small', 'Sticker'); bS.type = 'button';
+      bS.addEventListener('click', function () { selectedId = it.id; renderPreview(); renderRows(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+      var bE = h('button', 'small', 'I-edit'); bE.type = 'button';
+      bE.addEventListener('click', function () { startEdit(it); });
+      var bD = h('button', 'small danger', 'Burahin'); bD.type = 'button';
+      bD.addEventListener('click', function () {
+        state.items = state.items.filter(function (x) { return x.id !== it.id; });
+        if (selectedId === it.id) selectedId = null;
+        if (editingId === it.id) stopEdit();
+        save(); renderAll(); toast('Nabura ang ' + it.no + '.');
+      });
+      c4.appendChild(bS); c4.appendChild(bE); c4.appendChild(bD);
+      [c1, c2, c3, c4].forEach(function (c) { tr.appendChild(c); });
+      tb.appendChild(tr);
+    });
+    $('exampleNote').hidden = !state.items.some(function (x) { return x.example; });
+  }
+  function renderStats() { $('stTotal').textContent = state.items.length; $('stNext').textContent = nextNo(); }
+  function renderAll() { renderStats(); renderPreview(); renderRows(); }
+
+  /* ---------- scan ---------- */
+  function setMsg(text, kind) { var m = $('scanMsg'); m.textContent = text; m.className = 'scanmsg' + (kind ? ' ' + kind : ''); }
+  function handleScan(raw) {
+    var v = String(raw || '').replace(/[\r\n\t]/g, '').trim();
+    if (!v) return;
+    var it = findByNo(v);
+    if (!it) { setMsg('Walang property na may numerong "' + v + '". Idagdag muna ito sa form.', 'bad'); }
+    else {
+      selectedId = it.id; renderPreview(); renderRows();
+      setMsg('Nahanap: ' + it.no + '. ' + it.articles.slice(0, 60) + (it.articles.length > 60 ? '...' : ''), 'ok');
+      if (state.settings.autoPrint) doPrint('sticker');
+    }
+    $('scan').value = ''; $('scan').focus();
+  }
+  $('scan').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); handleScan($('scan').value); } });
+  $('scanGo').addEventListener('click', function () { handleScan($('scan').value); });
+  document.addEventListener('keydown', function (e) {
+    if (document.activeElement === document.body && e.key && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) $('scan').focus();
+  });
+
+  /* ---------- add / edit ---------- */
+  function showError(msg) { var e = $('formError'); e.textContent = msg; e.hidden = !msg; }
+  function clearForm(keep) {
+    $('fNo').value = nextNo(); $('fArt').value = ''; $('fUser').value = '';
+    if (!keep) { $('fLoc').value = ''; $('fIcs').value = ''; $('fAcc').value = ''; $('fDate').value = ''; }
+  }
+  function startEdit(it) {
+    editingId = it.id;
+    $('fNo').value = it.no; $('fLoc').value = it.location; $('fIcs').value = it.ics; $('fArt').value = it.articles;
+    $('fUser').value = it.endUser; $('fAcc').value = it.accountable; $('fDate').value = it.dateAcquired || '';
+    $('saveBtn').textContent = 'I-save ang pagbabago'; $('cancelEdit').hidden = false;
+    $('hAdd').textContent = 'I-edit ang property';
+    showError(''); $('fArt').focus();
+  }
+  function stopEdit() {
+    editingId = null; $('saveBtn').textContent = 'Idagdag at gumawa ng barcode'; $('cancelEdit').hidden = true;
+    $('hAdd').textContent = 'Magdagdag ng property'; clearForm(true);
+  }
+  $('cancelEdit').addEventListener('click', stopEdit);
+
+  $('propForm').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var no = $('fNo').value.trim(), art = $('fArt').value.trim();
+    if (!no) { showError('Ilagay ang Property No.'); return; }
+    if (!art) { showError('Ilagay ang Articles.'); return; }
+    var dup = findByNo(no);
+    if (dup && dup.id !== editingId) { showError('Nagamit na ang Property No. na ito.'); return; }
+    showError('');
+    var data = { no: no, location: $('fLoc').value.trim(), articles: art, endUser: $('fUser').value.trim(),
+      accountable: $('fAcc').value.trim(), dateAcquired: $('fDate').value, ics: $('fIcs').value.trim() };
+    if (editingId) {
+      var cur = findById(editingId);
+      for (var k in data) cur[k] = data[k];
+      delete cur.example;
+      bumpCounter(no); selectedId = cur.id; save(); stopEdit(); renderAll(); toast('Na-save ang pagbabago.');
+    } else {
+      var item = { id: 'p' + Date.now() + '-' + state.items.length, at: Date.now() };
+      for (var k2 in data) item[k2] = data[k2];
+      state.items.push(item); bumpCounter(no); selectedId = item.id;
+      save(); clearForm(true); renderAll(); toast('Naidagdag ang ' + no + '.');
+    }
+  });
+
+  /* ---------- search, csv ---------- */
+  $('search').addEventListener('input', renderRows);
+  function csvEscape(v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; }
+  function buildCsv() {
+    var lines = ['property_no,location,articles,end_user,accountable_person,date_acquired,ics'];
+    state.items.forEach(function (it) {
+      lines.push([it.no, it.location, it.articles, it.endUser, it.accountable, it.dateAcquired, it.ics].map(csvEscape).join(','));
+    });
+    return lines.join('\n');
+  }
+  function parseCsv(text) {
+    var rows = [], row = [], cur = '', q = false, i = 0;
+    text = text.replace(/^﻿/, '');
+    for (; i < text.length; i++) {
+      var ch = text[i];
+      if (q) {
+        if (ch === '"') { if (text[i + 1] === '"') { cur += '"'; i++; } else q = false; }
+        else cur += ch;
+      } else if (ch === '"') q = true;
+      else if (ch === ',') { row.push(cur); cur = ''; }
+      else if (ch === '\n' || ch === '\r') {
+        if (ch === '\r' && text[i + 1] === '\n') i++;
+        row.push(cur); cur = ''; if (row.length > 1 || row[0] !== '') rows.push(row); row = [];
+      } else cur += ch;
+    }
+    row.push(cur); if (row.length > 1 || row[0] !== '') rows.push(row);
+    return rows;
+  }
+  $('copyCsv').addEventListener('click', function () {
+    if (!state.items.length) { toast('Wala pang laman ang listahan.'); return; }
+    var csv = buildCsv();
+    copyText(csv).then(function (ok) {
+      var ta = $('csvOut');
+      if (ok) { ta.hidden = true; toast('Nakopya ang CSV. I-paste sa Excel o Notepad.'); }
+      else { ta.value = csv; ta.hidden = false; ta.focus(); ta.select(); toast('Piliin at kopyahin gamit ang Ctrl+C.'); }
+    });
+  });
+  $('importBtn').addEventListener('click', function () { $('importFile').click(); });
+  $('importFile').addEventListener('change', function () {
+    var f = $('importFile').files[0]; if (!f) return;
+    var rd = new FileReader();
+    rd.onload = function () {
+      var rows = parseCsv(String(rd.result || ''));
+      if (rows.length < 2) { toast('Walang nabasang laman sa CSV.'); return; }
+      var head = rows[0].map(function (x) { return x.trim().toLowerCase().replace(/[\s.]+/g, '_'); });
+      function col(names) { for (var i = 0; i < names.length; i++) { var ix = head.indexOf(names[i]); if (ix !== -1) return ix; } return -1; }
+      var ix = { no: col(['property_no', 'property_number', 'no', 'barcode']), loc: col(['location']), art: col(['articles', 'article', 'description']),
+        user: col(['end_user', 'enduser']), acc: col(['accountable_person', 'accountable']), date: col(['date_acquired', 'date']), ics: col(['ics']) };
+      if (ix.no === -1 || ix.art === -1) { toast('Kailangan ang mga column na property_no at articles.'); return; }
+      var added = 0, skipped = 0;
+      function g(r, i) { return i === -1 || r[i] == null ? '' : String(r[i]).trim(); }
+      rows.slice(1).forEach(function (r) {
+        var no = g(r, ix.no), art = g(r, ix.art);
+        if (!no || !art || findByNo(no)) { skipped++; return; }
+        var d = g(r, ix.date); if (d && !/^\d{4}-\d{2}-\d{2}$/.test(d)) { var p = new Date(d); d = isNaN(p.getTime()) ? '' : p.getFullYear() + '-' + pad(p.getMonth() + 1, 2) + '-' + pad(p.getDate(), 2); }
+        state.items.push({ id: 'p' + Date.now() + '-' + state.items.length, at: Date.now(), no: no, location: g(r, ix.loc), articles: art,
+          endUser: g(r, ix.user), accountable: g(r, ix.acc), dateAcquired: d, ics: g(r, ix.ics) });
+        bumpCounter(no); added++;
+      });
+      save(); renderAll(); clearForm(true);
+      toast('Naidagdag ang ' + added + ' item' + (skipped ? ', nilaktawan ang ' + skipped + '.' : '.'));
+    };
+    rd.readAsText(f); $('importFile').value = '';
+  });
+  $('wipe').addEventListener('click', function () { $('wipe').hidden = true; $('wipeAsk').hidden = false; });
+  $('wipeNo').addEventListener('click', function () { $('wipeAsk').hidden = true; $('wipe').hidden = false; });
+  $('wipeYes').addEventListener('click', function () {
+    state.items = []; state.counters = {}; selectedId = null; stopEdit();
+    save(); $('wipeAsk').hidden = true; $('wipe').hidden = false; $('csvOut').hidden = true;
+    renderAll(); clearForm(true); toast('Nabura ang lahat ng property.');
+  });
+
+  /* ---------- settings ---------- */
+  function fillSettings() {
+    var s = state.settings;
+    $('sLine1').value = s.line1; $('sLine2').value = s.line2;
+    for (var i = 0; i < 3; i++) $('sSig' + i).value = s.sig[i] || '';
+    $('sPrefix').value = s.prefix; $('sYear').value = s.year; $('sDigits').value = String(s.digits);
+    $('sWidth').value = s.width; $('autoPrint').checked = !!s.autoPrint;
+    $('logoPrev').hidden = !s.logo; $('logoClear').hidden = !s.logo; if (s.logo) $('logoPrev').src = s.logo;
+  }
+  function bindSetting(id, fn) {
+    $(id).addEventListener('input', function () { fn($(id).value); save(); renderPreview(); renderStats(); });
+  }
+  bindSetting('sLine1', function (v) { state.settings.line1 = v; });
+  bindSetting('sLine2', function (v) { state.settings.line2 = v; });
+  [0, 1, 2].forEach(function (i) { bindSetting('sSig' + i, function (v) { state.settings.sig[i] = v; }); });
+  bindSetting('sPrefix', function (v) { state.settings.prefix = v.trim().toUpperCase() || 'MOST-0101'; if (!editingId) $('fNo').value = nextNo(); });
+  bindSetting('sYear', function (v) { state.settings.year = v.replace(/\D/g, '').slice(0, 4) || String(new Date().getFullYear()); if (!editingId) $('fNo').value = nextNo(); });
+  $('sDigits').addEventListener('change', function () { state.settings.digits = Number($('sDigits').value); save(); renderStats(); if (!editingId) $('fNo').value = nextNo(); });
+  bindSetting('sWidth', function (v) { var w = parseFloat(v); if (w >= 8 && w <= 20) state.settings.width = w; });
+  $('autoPrint').addEventListener('change', function () { state.settings.autoPrint = $('autoPrint').checked; save(); });
+  $('sLogoFile').addEventListener('change', function () {
+    var f = $('sLogoFile').files[0]; if (!f) return;
+    var rd = new FileReader();
+    rd.onload = function () {
+      var img = new Image();
+      img.onload = function () {
+        var max = 240, sc = Math.min(1, max / Math.max(img.width, img.height));
+        var c = document.createElement('canvas'); c.width = Math.round(img.width * sc); c.height = Math.round(img.height * sc);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        state.settings.logo = c.toDataURL('image/png'); save(); fillSettings(); renderPreview(); toast('Nailagay ang logo.');
+      };
+      img.src = String(rd.result);
+    };
+    rd.readAsDataURL(f); $('sLogoFile').value = '';
+  });
+  $('logoClear').addEventListener('click', function () { state.settings.logo = ''; save(); fillSettings(); renderPreview(); });
+
+  $('printSticker').addEventListener('click', function () { doPrint('sticker'); });
+  $('printLabel').addEventListener('click', function () { doPrint('label'); });
+
+  /* ---------- start ---------- */
+  var had = load();
+  if (!had) {
+    state.items.push({ id: 'ex1', at: Date.now(), example: true, no: 'MOST-0101-2023-003', location: 'Procurement Section',
+      articles: 'SYSTEM UNIT LITE X9 Series Micro ATX ID: 00331-10000-00001-AA453 with NVISION Monitor SN: N220BC5JH23042460',
+      endUser: '', accountable: 'MUHSIN AYATULLAH . MAULANA', dateAcquired: '', ics: '179' });
+    state.counters['MOST-0101-2023'] = 3;
+    save();
+  }
+  fillSettings();
+  if (state.items.length) selectedId = state.items[state.items.length - 1].id;
+  clearForm(false);
+  renderAll();
+  try { $('scan').focus(); } catch (e) {}
+})();
+</script>
+
+</html>
