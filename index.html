@@ -1,160 +1,220 @@
-Property Sticker  
-System
-    
-    
-      [Dashboard](#dashboard)
-      [Add Property](#dashboard)
-      [Property List](#list)
-      [Analytics](#analytics)
-      [Settings](#setup)
-    
-    Saved in this browser.
-  
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Property Sticker System</title>
+<style>
+:root{--g:#15803d;--b:#2563eb;--v:#7c3aed;--r:#dc2626;--line:#e2e8f0;--bg:#f1f5f9;--tx:#0f172a}
+*{box-sizing:border-box}body{margin:0;font:14px system-ui,sans-serif;background:var(--bg);color:var(--tx)}
+nav{background:#0f172a;color:#fff;display:flex;gap:4px;align-items:center;padding:8px 14px;flex-wrap:wrap}
+nav b{margin-right:12px}nav a{color:#cbd5e1;text-decoration:none;padding:7px 12px;border-radius:6px}nav a.on{background:var(--g);color:#fff}
+main{max-width:1100px;margin:auto;padding:14px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:14px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:8px;padding:12px}.stat b{font-size:24px;display:block}.stat span{color:#475569}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;margin-bottom:14px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:8px;margin-bottom:14px}.cols .panel{margin:0}
+.panel header{padding:10px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.panel h2{margin:0;font-size:15px}.pbody{padding:14px}
+.field{margin-bottom:10px}.field label{display:block;font-size:12px;color:#475569;margin-bottom:3px}
+input,textarea,select{width:100%;padding:8px;border:1px solid #cbd5e1;border-radius:6px;font:inherit}textarea{min-height:60px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.mono{font-family:ui-monospace,monospace}
+button{padding:8px 12px;border:1px solid #cbd5e1;background:#fff;border-radius:6px;cursor:pointer;font:inherit}
+button.primary{background:var(--g);color:#fff;border-color:var(--g)}button.blue{background:var(--b);color:#fff;border-color:var(--b)}
+button.violet{background:var(--v);color:#fff;border-color:var(--v)}button.danger{color:var(--r);border-color:var(--r)}button.small{padding:4px 8px;font-size:12px}
+.btns,.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;align-items:center}.toolbar input[type=search]{flex:1;min-width:160px;width:auto}
+.error{color:var(--r)}.hint{color:#64748b;font-size:12px}
+table{width:100%;border-collapse:collapse}th,td{padding:8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{background:#f8fafc;font-size:12px}
+.tablewrap{overflow-x:auto}
+.paper{background:#fff;border:1px dashed #94a3b8;padding:8px;margin-bottom:8px;overflow:auto}
+.stk{border:2px solid #000;padding:8px;font:11px Arial,sans-serif;color:#000;background:#fff}
+.stk .h{text-align:center;line-height:1.3}.stk .h b{font-size:13px}.stk img.lg{height:36px}
+.stk .mid{display:flex;gap:8px;margin:6px 0}.stk .mid>div:first-child{flex:1}.stk .mid img{width:90px;height:90px}
+.stk .pn{font:bold 15px monospace;margin-bottom:4px}.stk p{margin:2px 0}
+.stk .sig{display:flex;gap:6px;margin-top:10px;text-align:center}.stk .sig div{flex:1;border-top:1px solid #000;padding-top:2px;font-size:9px}
+.bar{display:flex;align-items:center;gap:8px;margin-bottom:6px}.bar i{display:block;height:16px;background:var(--g);border-radius:3px;min-width:2px}.bar span{width:150px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.view[hidden]{display:none}
+#scanBox{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}#scanBox input[type=text]{flex:1;min-width:200px;width:auto}
+</style></head><body>
+<nav><b>Property Sticker System</b>
+<a href="#dashboard">Dashboard</a><a href="#list">Property List</a><a href="#analytics">Analytics</a><a href="#setup">Settings</a></nav>
+<main>
 
-  
-    
-      
-        # Dashboard
-
-        Scan a QR code to show its sticker.
-
-      
-      
-        
-          
-          
-        
-         Auto-print
-      
-    
-    Ready. The scanner types the Property No. and presses Enter by itself.
-
-```
-<!-- DASHBOARD -->
 <section class="view" id="v-dashboard">
-  <div class="stats">
-    <div class="stat"><div class="ico g"><svg class="ic" data-icon="barcode"></svg></div><div><b id="stTotal">0</b><span>Total Properties</span><em id="stTotalSub"></em></div></div>
-    <div class="stat"><div class="ico b"><svg class="ic" data-icon="scan"></svg></div><div><b id="stScans">0</b><span>Total Scans</span><em>Since the start</em></div></div>
-    <div class="stat"><div class="ico v"><svg class="ic" data-icon="cal"></svg></div><div><b id="stMonth">0</b><span id="stMonthLbl">This Month</span><em>Newly added</em></div></div>
-    <div class="stat"><div class="ico a"><svg class="ic" data-icon="db"></svg></div><div><b id="stStore">0 KB</b><span>Storage Used</span><em>In this browser</em></div></div>
-  </div>
-
-  <div class="cols">
-    <section class="panel" aria-labelledby="hAdd">
-      <header><h2 id="hAdd"><svg class="ic" data-icon="barcode"></svg><span id="hAddTxt">Add Property</span></h2></header>
-      <div class="pbody">
-        <form id="propForm" autocomplete="off">
-          <div class="field"><label for="fNo">Property No. (automatic, editable)</label><input id="fNo" class="mono" type="text" maxlength="40"></div>
-          <div class="row2">
-            <div class="field"><label for="fLoc">Location</label><input id="fLoc" type="text" maxlength="80" placeholder="e.g. Procurement Section"></div>
-            <div class="field"><label for="fIcs">ICS</label><input id="fIcs" type="text" maxlength="30" placeholder="e.g. 179"></div>
-          </div>
-          <div class="field"><label for="fArt">Articles</label><textarea id="fArt" maxlength="400" placeholder="e.g. SYSTEM UNIT LITE X9 Series Micro ATX ID: ..."></textarea></div>
-          <div class="row2">
-            <div class="field"><label for="fUser">End User</label><input id="fUser" type="text" maxlength="80"></div>
-            <div class="field"><label for="fAcc">Accountable Person</label><input id="fAcc" type="text" maxlength="80"></div>
-          </div>
-          <div class="field"><label for="fDate">Date Acquired</label><input id="fDate" type="date"></div>
-          <p class="error" id="formError" hidden></p>
-          <div class="btns">
-            <button class="primary" type="submit" id="saveBtn"><svg class="ic" data-icon="barcode"></svg><span id="saveTxt">Add and generate QR code</span></button>
-            <button type="button" id="resetBtn"><svg class="ic" data-icon="reset"></svg>Reset</button>
-          </div>
-        </form>
-      </div>
-    </section>
-
-    <section class="panel" aria-labelledby="hPrev">
-      <header><h2 id="hPrev"><svg class="ic" data-icon="eye"></svg>Sticker Preview</h2></header>
-      <div class="pbody pgrid">
-        <div class="paper" id="stickerPaper"></div>
-        <div class="paper labelpaper" id="labelPaper"></div>
-        <div class="btns">
-          <button type="button" class="primary" id="printSticker"><svg class="ic" data-icon="print"></svg>Print Sticker</button>
-          <button type="button" class="blue" id="printLabel"><svg class="ic" data-icon="print"></svg>Print QR Code</button>
-          <button type="button" class="violet" id="dlLabel"><svg class="ic" data-icon="download"></svg>Download PNG</button>
-        </div>
-        <p class="hint">Print and Download work when the page is opened in your own browser (GitHub Pages or the file), not inside a preview.</p>
-      </div>
-    </section>
-  </div>
-
-  <section class="panel" aria-labelledby="hRecent">
-    <header><h2 id="hRecent"><svg class="ic" data-icon="clock"></svg>Recent Properties</h2><a href="#list">View All <svg class="ic" data-icon="arrow"></svg></a></header>
-    <div class="tablewrap">
-      <table class="list">
-        <thead><tr><th>#</th><th>Property No.</th><th>Articles</th><th>Accountable</th><th>Added</th><th style="text-align:right">Actions</th></tr></thead>
-        <tbody id="recentRows"></tbody>
-      </table>
-    </div>
-  </section>
+<div id="scanBox"><input id="scan" type="text" placeholder="Scan QR code here (scanner presses Enter)" autocomplete="off">
+<label><input type="checkbox" id="autoPrint" style="width:auto"> Auto-print</label></div>
+<p class="hint" id="scanMsg">Ready.</p>
+<div class="stats">
+<div class="stat"><b id="stTotal">0</b><span>Total Properties</span></div>
+<div class="stat"><b id="stScans">0</b><span>Total Scans</span></div>
+<div class="stat"><b id="stMonth">0</b><span>Added This Month</span></div>
+<div class="stat"><b id="stStore">0 KB</b><span>Storage Used</span></div></div>
+<div class="cols">
+<section class="panel"><header><h2 id="hAddTxt">Add Property</h2></header><div class="pbody">
+<form id="propForm" autocomplete="off">
+<div class="field"><label for="fNo">Property No. (automatic, editable)</label><input id="fNo" class="mono" maxlength="40"></div>
+<div class="row2"><div class="field"><label for="fLoc">Location</label><input id="fLoc" maxlength="80"></div>
+<div class="field"><label for="fIcs">ICS</label><input id="fIcs" maxlength="30"></div></div>
+<div class="field"><label for="fArt">Articles</label><textarea id="fArt" maxlength="400"></textarea></div>
+<div class="row2"><div class="field"><label for="fUser">End User</label><input id="fUser" maxlength="80"></div>
+<div class="field"><label for="fAcc">Accountable Person</label><input id="fAcc" maxlength="80"></div></div>
+<div class="field"><label for="fDate">Date Acquired</label><input id="fDate" type="date"></div>
+<p class="error" id="formError" hidden></p>
+<div class="btns"><button class="primary" type="submit" id="saveTxt">Add and generate QR code</button>
+<button type="button" id="resetBtn">Reset</button></div></form></div></section>
+<section class="panel"><header><h2>Sticker Preview</h2></header><div class="pbody">
+<div class="paper" id="stickerPaper"></div>
+<div class="btns"><button type="button" class="primary" id="printSticker">Print Sticker</button>
+<button type="button" class="blue" id="printLabel">Print QR Code</button>
+<button type="button" class="violet" id="dlLabel">Download PNG</button></div>
+<p class="hint">Print and Download work when the page is opened in your own browser (GitHub Pages), not inside a preview.</p></div></section></div>
+<section class="panel"><header><h2>Recent Properties</h2><a href="#list">View All</a></header>
+<div class="tablewrap"><table><thead><tr><th>#</th><th>Property No.</th><th>Articles</th><th>Accountable</th><th>Added</th><th style="text-align:right">Actions</th></tr></thead><tbody id="recentRows"></tbody></table></div></section>
 </section>
 
-<!-- LISTAHAN -->
 <section class="view" id="v-list" hidden>
-  <section class="panel" aria-labelledby="hList">
-    <header><h2 id="hList"><svg class="ic" data-icon="list"></svg>Property List</h2></header>
-    <div class="pbody" style="display:grid;gap:14px">
-      <div class="toolbar">
-        <input id="search" type="search" placeholder="Search properties" aria-label="Search properties">
-        <button type="button" id="copyCsv"><svg class="ic" data-icon="download"></svg>Copy CSV</button>
-        <button type="button" id="importBtn"><svg class="ic" data-icon="plus"></svg>Import CSV</button>
-        <input id="importFile" type="file" accept=".csv,text/csv" hidden>
-        <button type="button" class="danger" id="wipe"><svg class="ic" data-icon="trash"></svg>Delete All</button>
-        <span class="confirm" id="wipeAsk" hidden>Are you sure?
-          <button type="button" class="small danger" id="wipeYes">Yes, delete</button>
-          <button type="button" class="small" id="wipeNo">No</button></span>
-      </div>
-      <p class="note2" id="exampleNote" hidden>Some items are examples (tagged "example"). You can delete them.</p>
-      <div class="tablewrap" style="border:1px solid var(--line);border-radius:8px">
-        <table class="list">
-          <thead><tr><th>#</th><th>Property No.</th><th>Articles</th><th>Accountable</th><th>Location</th><th style="text-align:right">Actions</th></tr></thead>
-          <tbody id="allRows"></tbody>
-        </table>
-      </div>
-      <p class="hint">CSV columns: property_no, location, articles, end_user, accountable_person, date_acquired, ics.</p>
-      <textarea id="csvOut" readonly hidden aria-label="CSV na kokopyahin"></textarea>
-    </div>
-  </section>
-</section>
+<section class="panel"><header><h2>Property List</h2></header><div class="pbody">
+<div class="toolbar"><input id="search" type="search" placeholder="Search properties">
+<button type="button" class="blue" id="syncAll">Sync All to Sheet</button>
+<button type="button" id="copyCsv">Copy CSV</button>
+<button type="button" id="importBtn">Import CSV</button><input id="importFile" type="file" accept=".csv,text/csv" hidden>
+<button type="button" class="danger" id="wipe">Delete All</button>
+<span id="wipeAsk" hidden>Are you sure? <button type="button" class="small danger" id="wipeYes">Yes, delete</button> <button type="button" class="small" id="wipeNo">No</button></span></div>
+<div class="tablewrap" style="margin-top:10px"><table><thead><tr><th>#</th><th>Property No.</th><th>Articles</th><th>Accountable</th><th>Location</th><th style="text-align:right">Actions</th></tr></thead><tbody id="allRows"></tbody></table></div>
+<p class="hint">CSV columns: property_no, location, articles, end_user, accountable_person, date_acquired, ics.</p>
+<textarea id="csvOut" readonly hidden></textarea></div></section></section>
 
-<!-- ANALYTICS -->
 <section class="view" id="v-analytics" hidden>
-  <div class="cols" style="align-items:start">
-    <section class="panel"><header><h2><svg class="ic" data-icon="chart"></svg>Properties by Location</h2></header><div class="pbody"><div class="bars" id="barsLoc"></div></div></section>
-    <section class="panel"><header><h2><svg class="ic" data-icon="cal"></svg>Added per Month</h2></header><div class="pbody"><div class="months" id="monthsChart"></div></div></section>
-  </div>
-  <section class="panel"><header><h2><svg class="ic" data-icon="list"></svg>Properties by Accountable Person</h2></header><div class="pbody"><div class="bars" id="barsAcc"></div></div></section>
-</section>
+<div class="cols">
+<section class="panel"><header><h2>Properties by Location</h2></header><div class="pbody" id="barsLoc"></div></section>
+<section class="panel"><header><h2>Added per Month</h2></header><div class="pbody" id="monthsChart"></div></section></div>
+<section class="panel"><header><h2>Properties by Accountable Person</h2></header><div class="pbody" id="barsAcc"></div></section></section>
 
-<!-- SETTINGS -->
 <section class="view" id="v-setup" hidden>
-  <section class="panel" aria-labelledby="hSet">
-    <header><h2 id="hSet"><svg class="ic" data-icon="sliders"></svg>Sticker Settings</h2></header>
-    <div class="pbody">
-      <form id="setForm" autocomplete="off" onsubmit="return false">
-        <div class="row2">
-          <div class="field"><label for="sLine1">Header line 1</label><input id="sLine1" type="text" maxlength="100"></div>
-          <div class="field"><label for="sLine2">Header line 2 (bold)</label><input id="sLine2" type="text" maxlength="100"></div>
-        </div>
-        <div class="row3">
-          <div class="field"><label for="sSig0">COA Representative</label><input id="sSig0" type="text" maxlength="60"></div>
-          <div class="field"><label for="sSig1">Property Custodian</label><input id="sSig1" type="text" maxlength="60"></div>
-          <div class="field"><label for="sSig2">Inventory Representative</label><input id="sSig2" type="text" maxlength="60"></div>
-        </div>
-        <div class="row3">
-          <div class="field"><label for="sPrefix">Property No. prefix</label><input id="sPrefix" class="mono" type="text" maxlength="24"></div>
-          <div class="field"><label for="sYear">Year</label><input id="sYear" class="mono" type="text" maxlength="4" inputmode="numeric"></div>
-          <div class="field"><label for="sDigits">Number length</label><select id="sDigits"><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
-        </div>
-        <div class="row2">
-          <div class="field"><label for="sWidth">Sticker width (cm)</label><input id="sWidth" type="number" min="8" max="20" step="0.5"></div>
-          <div class="field"><label for="sLogoFile">Logo (image)</label>
-            <div class="logorow"><input id="sLogoFile" type="file" accept="image/*"><img id="logoPrev" alt="Logo" hidden><button type="button" class="small" id="logoClear" hidden>Remove</button></div></div>
-        </div>
-        <p class="hint">Changes are saved automatically.</p>
-      </form>
-    </div>
-  </section>
-</section>
-```
+<section class="panel"><header><h2>Settings</h2></header><div class="pbody"><form id="setForm" autocomplete="off" onsubmit="return false">
+<div class="field"><label for="sSheet">Google Sheet Web App URL (ends in /exec). QR codes will open this link.</label><input id="sSheet" class="mono" placeholder="https://script.google.com/macros/s/.../exec"></div>
+<div class="row2"><div class="field"><label for="sLine1">Header line 1</label><input id="sLine1" maxlength="100"></div>
+<div class="field"><label for="sLine2">Header line 2 (bold)</label><input id="sLine2" maxlength="100"></div></div>
+<div class="row3"><div class="field"><label for="sSig0">COA Representative</label><input id="sSig0" maxlength="60"></div>
+<div class="field"><label for="sSig1">Property Custodian</label><input id="sSig1" maxlength="60"></div>
+<div class="field"><label for="sSig2">Inventory Representative</label><input id="sSig2" maxlength="60"></div></div>
+<div class="row3"><div class="field"><label for="sPrefix">Property No. prefix</label><input id="sPrefix" class="mono" maxlength="24"></div>
+<div class="field"><label for="sYear">Year</label><input id="sYear" class="mono" maxlength="4"></div>
+<div class="field"><label for="sDigits">Number length</label><select id="sDigits"><option>2</option><option>3</option><option>4</option><option>5</option></select></div></div>
+<div class="row2"><div class="field"><label for="sWidth">Sticker width (cm)</label><input id="sWidth" type="number" min="8" max="20" step="0.5"></div>
+<div class="field"><label for="sLogoFile">Logo (image)</label><input id="sLogoFile" type="file" accept="image/*"> <button type="button" class="small" id="logoClear">Remove logo</button></div></div>
+<p class="hint">Changes are saved automatically.</p></form></div></section></section>
+</main>
+<div id="qrTmp" style="position:absolute;left:-9999px"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const FIELDS=['property_no','location','articles','end_user','accountable_person','date_acquired','ics'];
+const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}};
+const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){alert('Storage full or blocked.')}};
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let db=load('ps_data',[]);
+let set=Object.assign({sheet:'',line1:'Republic of the Philippines',line2:'Your Agency Name',sig0:'',sig1:'',sig2:'',prefix:'PROP',year:String(new Date().getFullYear()),digits:4,width:12,logo:''},load('ps_set',{}));
+let scans=load('ps_scans',0),cur=null,editing=null;
+
+// ---- QR + sheet ----
+const qrValue=no=>set.sheet?set.sheet+'?no='+encodeURIComponent(no):no;
+const extractNo=t=>{try{return new URL(t).searchParams.get('no')||t}catch{return t}};
+function qrURL(text){const t=$('qrTmp');t.innerHTML='';new QRCode(t,{text,width:256,height:256,correctLevel:QRCode.CorrectLevel.M});
+ const c=t.querySelector('canvas');return c?c.toDataURL('image/png'):''}
+function sync(p){if(!set.sheet)return;
+ const d={};FIELDS.forEach(k=>d[k]=p[k]||'');
+ fetch(set.sheet,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(d)}).catch(()=>{})}
+
+// ---- numbering ----
+function nextNo(){const pre=`${set.prefix}-${set.year}-`;let m=0;
+ db.forEach(p=>{if(p.property_no.startsWith(pre)){const n=parseInt(p.property_no.slice(pre.length),10);if(n>m)m=n}});
+ return pre+String(m+1).padStart(+set.digits,'0')}
+
+// ---- sticker ----
+function stickerHTML(p){const qr=qrURL(qrValue(p.property_no));
+ return `<div class="stk" style="width:${set.width}cm">
+ <div class="h">${set.logo?`<img class="lg" src="${set.logo}"><br>`:''}${esc(set.line1)}<br><b>${esc(set.line2)}</b></div>
+ <div class="mid"><div><div class="pn">${esc(p.property_no)}</div>
+ <p><b>Articles:</b> ${esc(p.articles)}</p><p><b>ICS:</b> ${esc(p.ics)}</p><p><b>Location:</b> ${esc(p.location)}</p>
+ <p><b>End User:</b> ${esc(p.end_user)}</p><p><b>Accountable:</b> ${esc(p.accountable_person)}</p><p><b>Date Acquired:</b> ${esc(p.date_acquired)}</p></div>
+ <img src="${qr}"></div>
+ <div class="sig"><div>${esc(set.sig0)}<br>COA Representative</div><div>${esc(set.sig1)}<br>Property Custodian</div><div>${esc(set.sig2)}<br>Inventory Representative</div></div></div>`}
+function show(p){cur=p;$('stickerPaper').innerHTML=p?stickerHTML(p):'<p class="hint">No sticker yet.</p>'}
+function printHTML(body){const w=window.open('','_blank');if(!w){alert('Allow pop-ups to print.');return}
+ w.document.write(`<html><head><title>Print</title><style>${[...document.styleSheets[0].cssRules].map(r=>r.cssText).join('')}body{background:#fff}</style></head><body>${body}</body></html>`);
+ w.document.close();w.focus();setTimeout(()=>w.print(),300)}
+$('printSticker').onclick=()=>cur?printHTML(stickerHTML(cur)):alert('Select a property first.');
+$('printLabel').onclick=()=>cur?printHTML(`<div style="text-align:center;font:bold 16px monospace"><img src="${qrURL(qrValue(cur.property_no))}" style="width:6cm"><br>${esc(cur.property_no)}</div>`):alert('Select a property first.');
+$('dlLabel').onclick=()=>{if(!cur)return alert('Select a property first.');const a=document.createElement('a');a.href=qrURL(qrValue(cur.property_no));a.download=cur.property_no+'.png';a.click()};
+
+// ---- form ----
+const fm={property_no:'fNo',location:'fLoc',ics:'fIcs',articles:'fArt',end_user:'fUser',accountable_person:'fAcc',date_acquired:'fDate'};
+function resetForm(){editing=null;Object.values(fm).forEach(i=>$(i).value='');$('fNo').value=nextNo();$('fDate').value=new Date().toISOString().slice(0,10);
+ $('hAddTxt').textContent='Add Property';$('saveTxt').textContent='Add and generate QR code';$('formError').hidden=true}
+$('resetBtn').onclick=resetForm;
+$('propForm').onsubmit=e=>{e.preventDefault();const p={};for(const k in fm)p[k]=$(fm[k]).value.trim();
+ const er=$('formError');
+ if(!p.property_no||!p.articles){er.textContent='Property No. and Articles are required.';er.hidden=false;return}
+ if(db.some(x=>x.property_no===p.property_no&&x.property_no!==editing)){er.textContent='That Property No. already exists.';er.hidden=false;return}
+ if(editing){const i=db.findIndex(x=>x.property_no===editing);p.added=db[i].added;db[i]=p}else{p.added=Date.now();db.push(p)}
+ save('ps_data',db);sync(p);show(p);resetForm();render()};
+function edit(no){const p=db.find(x=>x.property_no===no);if(!p)return;editing=no;for(const k in fm)$(fm[k]).value=p[k]||'';
+ $('hAddTxt').textContent='Edit Property';$('saveTxt').textContent='Save changes';location.hash='#dashboard';show(p)}
+
+// ---- tables ----
+function actions(p){return `<button class="small" data-a="v" data-n="${esc(p.property_no)}">Show</button> <button class="small" data-a="e" data-n="${esc(p.property_no)}">Edit</button> <button class="small danger" data-a="d" data-n="${esc(p.property_no)}">Delete</button>`}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;const n=b.dataset.n;
+ if(b.dataset.a==='v'){show(db.find(x=>x.property_no===n));location.hash='#dashboard';scrollTo(0,0)}
+ if(b.dataset.a==='e')edit(n);
+ if(b.dataset.a==='d'&&confirm('Delete '+n+'?')){db=db.filter(x=>x.property_no!==n);save('ps_data',db);if(cur&&cur.property_no===n)show(null);render()}});
+function render(){const q=$('search').value.toLowerCase();
+ $('recentRows').innerHTML=[...db].reverse().slice(0,5).map((p,i)=>`<tr><td>${i+1}</td><td class="mono">${esc(p.property_no)}</td><td>${esc(p.articles)}</td><td>${esc(p.accountable_person)}</td><td>${p.added?new Date(p.added).toLocaleDateString():''}</td><td style="text-align:right">${actions(p)}</td></tr>`).join('')||'<tr><td colspan=6 class="hint">No properties yet.</td></tr>';
+ $('allRows').innerHTML=db.filter(p=>!q||JSON.stringify(p).toLowerCase().includes(q)).map((p,i)=>`<tr><td>${i+1}</td><td class="mono">${esc(p.property_no)}</td><td>${esc(p.articles)}</td><td>${esc(p.accountable_person)}</td><td>${esc(p.location)}</td><td style="text-align:right">${actions(p)}</td></tr>`).join('')||'<tr><td colspan=6 class="hint">Nothing found.</td></tr>';
+ const now=new Date();$('stTotal').textContent=db.length;$('stScans').textContent=scans;
+ $('stMonth').textContent=db.filter(p=>{const d=new Date(p.added||0);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()}).length;
+ $('stStore').textContent=Math.round(JSON.stringify(localStorage).length/1024)+' KB';
+ bars('barsLoc',db.map(p=>p.location||'(none)'));bars('barsAcc',db.map(p=>p.accountable_person||'(none)'));
+ bars('monthsChart',db.map(p=>p.date_acquired?p.date_acquired.slice(0,7):'(none)'),true)}
+function bars(id,arr,sort){const c={};arr.forEach(x=>c[x]=(c[x]||0)+1);let e=Object.entries(c);
+ e=sort?e.sort():e.sort((a,b)=>b[1]-a[1]);const m=Math.max(1,...e.map(x=>x[1]));
+ $(id).innerHTML=e.map(([k,v])=>`<div class="bar"><span title="${esc(k)}">${esc(k)}</span><i style="width:${v/m*60}%"></i>${v}</div>`).join('')||'<p class="hint">No data.</p>'}
+$('search').oninput=render;
+
+// ---- scan ----
+$('scan').addEventListener('keydown',e=>{if(e.key!=='Enter')return;const no=extractNo($('scan').value.trim());$('scan').value='';
+ const p=db.find(x=>x.property_no===no);const m=$('scanMsg');
+ if(!p){m.textContent='Not found: '+no;return}
+ scans++;save('ps_scans',scans);show(p);render();m.textContent='Found: '+no;
+ if($('autoPrint').checked)printHTML(stickerHTML(p))});
+
+// ---- list tools ----
+$('copyCsv').onclick=()=>{const q=s=>`"${String(s??'').replace(/"/g,'""')}"`;
+ const t=[FIELDS.join(','),...db.map(p=>FIELDS.map(k=>q(p[k])).join(','))].join('\n');
+ const o=$('csvOut');o.value=t;o.hidden=false;o.select();try{navigator.clipboard.writeText(t)}catch{}};
+$('importBtn').onclick=()=>$('importFile').click();
+function parseCSV(t){const r=[];let row=[],f='',q=false;for(let i=0;i<t.length;i++){const c=t[i];
+ if(q){if(c==='"'){if(t[i+1]==='"'){f+='"';i++}else q=false}else f+=c}
+ else if(c==='"')q=true;else if(c===','){row.push(f);f=''}
+ else if(c==='\n'||c==='\r'){if(c==='\r'&&t[i+1]==='\n')i++;row.push(f);r.push(row);row=[];f=''}else f+=c}
+ if(f||row.length){row.push(f);r.push(row)}return r.filter(x=>x.some(y=>y.trim()))}
+$('importFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();
+ rd.onload=()=>{const rows=parseCSV(rd.result);const h=rows.shift().map(x=>x.trim().toLowerCase());let n=0;
+ rows.forEach(r=>{const p={};FIELDS.forEach(k=>p[k]=(r[h.indexOf(k)]||'').trim());
+ if(p.property_no&&!db.some(x=>x.property_no===p.property_no)){p.added=Date.now();db.push(p);n++}});
+ save('ps_data',db);render();resetForm();alert(n+' imported.')};rd.readAsText(f);e.target.value=''};
+$('syncAll').onclick=()=>{if(!set.sheet)return alert('Paste the Google Sheet Web App URL in Settings first.');
+ db.forEach((p,i)=>setTimeout(()=>sync(p),i*250));alert('Sending '+db.length+' properties to the sheet.')};
+$('wipe').onclick=()=>{$('wipeAsk').hidden=false};$('wipeNo').onclick=()=>{$('wipeAsk').hidden=true};
+$('wipeYes').onclick=()=>{db=[];save('ps_data',db);show(null);$('wipeAsk').hidden=true;resetForm();render()};
+
+// ---- settings ----
+const sm={sheet:'sSheet',line1:'sLine1',line2:'sLine2',sig0:'sSig0',sig1:'sSig1',sig2:'sSig2',prefix:'sPrefix',year:'sYear',digits:'sDigits',width:'sWidth'};
+for(const k in sm){$(sm[k]).value=set[k];$(sm[k]).addEventListener('input',()=>{set[k]=$(sm[k]).value.trim();save('ps_set',set);if(!editing)$('fNo').value=nextNo();if(cur)show(cur)})}
+$('sLogoFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{set.logo=r.result;save('ps_set',set);if(cur)show(cur)};r.readAsDataURL(f)};
+$('logoClear').onclick=()=>{set.logo='';save('ps_set',set);if(cur)show(cur)};
+
+// ---- routing ----
+function route(){const v=(location.hash||'#dashboard').slice(1);document.querySelectorAll('.view').forEach(s=>s.hidden=s.id!=='v-'+v);
+ document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+v));render()}
+addEventListener('hashchange',route);resetForm();show(null);route();
+</script></body></html>
