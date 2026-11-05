@@ -74,6 +74,7 @@ table{width:100%;border-collapse:collapse}th,td{padding:8px;border-bottom:1px so
 <section class="view" id="v-list" hidden>
 <section class="panel"><header><h2>Property List</h2></header><div class="pbody">
 <div class="toolbar"><input id="search" type="search" placeholder="Search properties">
+<button type="button" class="violet" id="loadSheet">Load from Sheet</button>
 <button type="button" class="blue" id="syncAll">Sync All to Sheet</button>
 <button type="button" id="copyCsv">Copy CSV</button>
 <button type="button" id="importBtn">Import CSV</button><input id="importFile" type="file" accept=".csv,text/csv" hidden>
@@ -204,6 +205,17 @@ $('importFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new
  save('ps_data',db);render();resetForm();alert(n+' imported.')};rd.readAsText(f);e.target.value=''};
 $('syncAll').onclick=()=>{if(!set.sheet)return alert('Paste the Google Sheet Web App URL in Settings first.');
  db.forEach((p,i)=>setTimeout(()=>sync(p),i*250));alert('Sending '+db.length+' properties to the sheet.')};
+function loadSheet(silent){
+ if(!set.sheet){if(!silent)alert('Paste the Web App URL in Settings first.');return}
+ fetch(set.sheet).then(r=>r.json()).then(rows=>{
+  if(!Array.isArray(rows))throw 0;let n=0;
+  rows.forEach(r=>{const p={};FIELDS.forEach(k=>p[k]=String(r[k]==null?'':r[k]).trim());
+   if(p.property_no&&!db.some(x=>x.property_no===p.property_no)){p.added=Date.now();db.push(p);n++}});
+  if(n)save('ps_data',db);
+  if(!editing)$('fNo').value=nextNo();
+  render();if(!silent)alert(n+' loaded from the sheet.')
+ }).catch(()=>{if(!silent)alert('Could not load from the sheet. Check the Web App URL and that access is set to Anyone.')})}
+$('loadSheet').onclick=()=>loadSheet(false);
 $('wipe').onclick=()=>{$('wipeAsk').hidden=false};$('wipeNo').onclick=()=>{$('wipeAsk').hidden=true};
 $('wipeYes').onclick=()=>{db=[];save('ps_data',db);show(null);$('wipeAsk').hidden=true;resetForm();render()};
 
@@ -216,5 +228,5 @@ $('logoClear').onclick=()=>{set.logo='';save('ps_set',set);if(cur)show(cur)};
 // ---- routing ----
 function route(){const v=(location.hash||'#dashboard').slice(1);document.querySelectorAll('.view').forEach(s=>s.hidden=s.id!=='v-'+v);
  document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+v));render()}
-addEventListener('hashchange',route);resetForm();show(null);route();
+addEventListener('hashchange',route);resetForm();show(null);route();loadSheet(true);
 </script></body></html>
