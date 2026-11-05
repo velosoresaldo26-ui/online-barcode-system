@@ -1,165 +1,160 @@
-<!DOCTYPE html>
-<html lang="tl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Code — Impormasyon</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
-        }
-        body {
-            background: linear-gradient(135deg, #2c3e50, #3498db);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        .card {
-            background: white;
-            border-radius: 16px;
-            padding: 30px;
-            max-width: 420px;
-            width: 100%;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            text-align: center;
-        }
-        h1 {
-            color: #2c3e50;
-            font-size: 1.4rem;
-            margin-bottom: 25px;
-        }
-        .icon {
-            font-size: 40px;
-            margin-bottom: 15px;
-        }
-        .loading {
-            color: #7f8c8d;
-            font-style: italic;
-        }
-        .data-row {
-            background: #f8f9fa;
-            padding: 12px 15px;
-            margin: 8px 0;
-            border-radius: 8px;
-            text-align: left;
-        }
-        .label {
-            font-weight: bold;
-            color: #2c3e50;
-            display: block;
-            font-size: 0.9rem;
-            margin-bottom: 3px;
-        }
-        .value {
-            color: #34495e;
-            font-size: 1rem;
-        }
-        .error {
-            color: #e74c3c;
-            padding: 15px;
-            background: #fdeaea;
-            border-radius: 8px;
-        }
-        .footer {
-            margin-top: 20px;
-            font-size: 0.8rem;
-            color: #95a5a6;
-        }
-    </style>
-</head>
-<body>
-    <div class="card">
-        <div class="icon">📋</div>
-        <h1>Impormasyon mula sa QR Code</h1>
+Property Sticker  
+System
+    
+    
+      [Dashboard](#dashboard)
+      [Add Property](#dashboard)
+      [Property List](#list)
+      [Analytics](#analytics)
+      [Settings](#setup)
+    
+    Saved in this browser.
+  
+
+  
+    
+      
+        # Dashboard
+
+        Scan a QR code to show its sticker.
+
+      
+      
         
-        <div id="content">
-            <p class="loading">🔄 Naglo-load ng impormasyon...</p>
-        </div>
+          
+          
+        
+         Auto-print
+      
+    
+    Ready. The scanner types the Property No. and presses Enter by itself.
 
-        <div class="footer">
-            Online Barcode System
+```
+<!-- DASHBOARD -->
+<section class="view" id="v-dashboard">
+  <div class="stats">
+    <div class="stat"><div class="ico g"><svg class="ic" data-icon="barcode"></svg></div><div><b id="stTotal">0</b><span>Total Properties</span><em id="stTotalSub"></em></div></div>
+    <div class="stat"><div class="ico b"><svg class="ic" data-icon="scan"></svg></div><div><b id="stScans">0</b><span>Total Scans</span><em>Since the start</em></div></div>
+    <div class="stat"><div class="ico v"><svg class="ic" data-icon="cal"></svg></div><div><b id="stMonth">0</b><span id="stMonthLbl">This Month</span><em>Newly added</em></div></div>
+    <div class="stat"><div class="ico a"><svg class="ic" data-icon="db"></svg></div><div><b id="stStore">0 KB</b><span>Storage Used</span><em>In this browser</em></div></div>
+  </div>
+
+  <div class="cols">
+    <section class="panel" aria-labelledby="hAdd">
+      <header><h2 id="hAdd"><svg class="ic" data-icon="barcode"></svg><span id="hAddTxt">Add Property</span></h2></header>
+      <div class="pbody">
+        <form id="propForm" autocomplete="off">
+          <div class="field"><label for="fNo">Property No. (automatic, editable)</label><input id="fNo" class="mono" type="text" maxlength="40"></div>
+          <div class="row2">
+            <div class="field"><label for="fLoc">Location</label><input id="fLoc" type="text" maxlength="80" placeholder="e.g. Procurement Section"></div>
+            <div class="field"><label for="fIcs">ICS</label><input id="fIcs" type="text" maxlength="30" placeholder="e.g. 179"></div>
+          </div>
+          <div class="field"><label for="fArt">Articles</label><textarea id="fArt" maxlength="400" placeholder="e.g. SYSTEM UNIT LITE X9 Series Micro ATX ID: ..."></textarea></div>
+          <div class="row2">
+            <div class="field"><label for="fUser">End User</label><input id="fUser" type="text" maxlength="80"></div>
+            <div class="field"><label for="fAcc">Accountable Person</label><input id="fAcc" type="text" maxlength="80"></div>
+          </div>
+          <div class="field"><label for="fDate">Date Acquired</label><input id="fDate" type="date"></div>
+          <p class="error" id="formError" hidden></p>
+          <div class="btns">
+            <button class="primary" type="submit" id="saveBtn"><svg class="ic" data-icon="barcode"></svg><span id="saveTxt">Add and generate QR code</span></button>
+            <button type="button" id="resetBtn"><svg class="ic" data-icon="reset"></svg>Reset</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="hPrev">
+      <header><h2 id="hPrev"><svg class="ic" data-icon="eye"></svg>Sticker Preview</h2></header>
+      <div class="pbody pgrid">
+        <div class="paper" id="stickerPaper"></div>
+        <div class="paper labelpaper" id="labelPaper"></div>
+        <div class="btns">
+          <button type="button" class="primary" id="printSticker"><svg class="ic" data-icon="print"></svg>Print Sticker</button>
+          <button type="button" class="blue" id="printLabel"><svg class="ic" data-icon="print"></svg>Print QR Code</button>
+          <button type="button" class="violet" id="dlLabel"><svg class="ic" data-icon="download"></svg>Download PNG</button>
         </div>
+        <p class="hint">Print and Download work when the page is opened in your own browser (GitHub Pages or the file), not inside a preview.</p>
+      </div>
+    </section>
+  </div>
+
+  <section class="panel" aria-labelledby="hRecent">
+    <header><h2 id="hRecent"><svg class="ic" data-icon="clock"></svg>Recent Properties</h2><a href="#list">View All <svg class="ic" data-icon="arrow"></svg></a></header>
+    <div class="tablewrap">
+      <table class="list">
+        <thead><tr><th>#</th><th>Property No.</th><th>Articles</th><th>Accountable</th><th>Added</th><th style="text-align:right">Actions</th></tr></thead>
+        <tbody id="recentRows"></tbody>
+      </table>
     </div>
+  </section>
+</section>
 
-    <script>
-        // ==============================================
-        // 👇 ILAGAY MO DITO ANG IYONG GOOGLE SHEET ID
-        // ==============================================
-        const GOOGLE_SHEET_ID = "ILAGAY_ANG_SHEET_ID_MO_DITO";
-        // ==============================================
+<!-- LISTAHAN -->
+<section class="view" id="v-list" hidden>
+  <section class="panel" aria-labelledby="hList">
+    <header><h2 id="hList"><svg class="ic" data-icon="list"></svg>Property List</h2></header>
+    <div class="pbody" style="display:grid;gap:14px">
+      <div class="toolbar">
+        <input id="search" type="search" placeholder="Search properties" aria-label="Search properties">
+        <button type="button" id="copyCsv"><svg class="ic" data-icon="download"></svg>Copy CSV</button>
+        <button type="button" id="importBtn"><svg class="ic" data-icon="plus"></svg>Import CSV</button>
+        <input id="importFile" type="file" accept=".csv,text/csv" hidden>
+        <button type="button" class="danger" id="wipe"><svg class="ic" data-icon="trash"></svg>Delete All</button>
+        <span class="confirm" id="wipeAsk" hidden>Are you sure?
+          <button type="button" class="small danger" id="wipeYes">Yes, delete</button>
+          <button type="button" class="small" id="wipeNo">No</button></span>
+      </div>
+      <p class="note2" id="exampleNote" hidden>Some items are examples (tagged "example"). You can delete them.</p>
+      <div class="tablewrap" style="border:1px solid var(--line);border-radius:8px">
+        <table class="list">
+          <thead><tr><th>#</th><th>Property No.</th><th>Articles</th><th>Accountable</th><th>Location</th><th style="text-align:right">Actions</th></tr></thead>
+          <tbody id="allRows"></tbody>
+        </table>
+      </div>
+      <p class="hint">CSV columns: property_no, location, articles, end_user, accountable_person, date_acquired, ics.</p>
+      <textarea id="csvOut" readonly hidden aria-label="CSV na kokopyahin"></textarea>
+    </div>
+  </section>
+</section>
 
-        // Kunin ang QR ID mula sa link (halimbawa: ?id=001)
-        const params = new URLSearchParams(window.location.search);
-        const qrId = params.get('id');
+<!-- ANALYTICS -->
+<section class="view" id="v-analytics" hidden>
+  <div class="cols" style="align-items:start">
+    <section class="panel"><header><h2><svg class="ic" data-icon="chart"></svg>Properties by Location</h2></header><div class="pbody"><div class="bars" id="barsLoc"></div></div></section>
+    <section class="panel"><header><h2><svg class="ic" data-icon="cal"></svg>Added per Month</h2></header><div class="pbody"><div class="months" id="monthsChart"></div></div></section>
+  </div>
+  <section class="panel"><header><h2><svg class="ic" data-icon="list"></svg>Properties by Accountable Person</h2></header><div class="pbody"><div class="bars" id="barsAcc"></div></div></section>
+</section>
 
-        const contentDiv = document.getElementById('content');
-
-        if (!qrId) {
-            contentDiv.innerHTML = `
-                <p class="error">⚠️ Walang nakitang QR ID sa link.</p>
-                <p style="margin-top:15px; color:#7f8c8d; font-size:0.9rem;">Gamitin ang link mula sa QR code.</p>
-            `;
-        } else {
-            // I-fetch ang data mula sa Google Sheet (published bilang CSV)
-            const sheetUrl = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/pub?output=csv`;
-
-            fetch(sheetUrl)
-                .then(response => {
-                    if (!response.ok) throw new Error("Hindi mabuksan ang Google Sheet");
-                    return response.text();
-                })
-                .then(csvText => {
-                    // I-parse ang CSV
-                    const rows = csvText.trim().split('\n').map(row => {
-                        // Simpleng paghiwalay — pwede i-adjust kung may comma sa loob ng data
-                        return row.split(',').map(cell => cell.trim().replace(/^"|"$/g, ''));
-                    });
-
-                    const headers = rows[0];
-                    let found = false;
-
-                    // Hanapin ang row na tumutugma sa QR ID
-                    for (let i = 1; i < rows.length; i++) {
-                        if (rows[i][0] === qrId) {
-                            found = true;
-                            let html = '';
-                            for (let j = 0; j < headers.length; j++) {
-                                html += `
-                                    <div class="data-row">
-                                        <span class="label">${headers[j]}</span>
-                                        <span class="value">${rows[i][j]}</span>
-                                    </div>
-                                `;
-                            }
-                            contentDiv.innerHTML = html;
-                            break;
-                        }
-                    }
-
-                    if (!found) {
-                        contentDiv.innerHTML = `
-                            <p class="error">❌ Hindi nakita ang ID: <strong>${qrId}</strong></p>
-                            <p style="margin-top:15px; color:#7f8c8d; font-size:0.9rem;">Siguraduhin na tama ang ID sa Google Sheet.</p>
-                        `;
-                    }
-                })
-                .catch(error => {
-                    contentDiv.innerHTML = `
-                        <p class="error">❌ May naganap na error:</p>
-                        <p style="color:#e74c3c; font-size:0.9rem;">${error.message}</p>
-                        <p style="margin-top:10px; color:#7f8c8d; font-size:0.85rem;">
-                            Siguraduhin na: <br>
-                            ✅ Nai-publish na ang Sheet sa web<br>
-                            ✅ Pampubliko ang access (Anyone with link)
-                        </p>
-                    `;
-                });
-        }
-    </script>
-</body>
-</html>
+<!-- SETTINGS -->
+<section class="view" id="v-setup" hidden>
+  <section class="panel" aria-labelledby="hSet">
+    <header><h2 id="hSet"><svg class="ic" data-icon="sliders"></svg>Sticker Settings</h2></header>
+    <div class="pbody">
+      <form id="setForm" autocomplete="off" onsubmit="return false">
+        <div class="row2">
+          <div class="field"><label for="sLine1">Header line 1</label><input id="sLine1" type="text" maxlength="100"></div>
+          <div class="field"><label for="sLine2">Header line 2 (bold)</label><input id="sLine2" type="text" maxlength="100"></div>
+        </div>
+        <div class="row3">
+          <div class="field"><label for="sSig0">COA Representative</label><input id="sSig0" type="text" maxlength="60"></div>
+          <div class="field"><label for="sSig1">Property Custodian</label><input id="sSig1" type="text" maxlength="60"></div>
+          <div class="field"><label for="sSig2">Inventory Representative</label><input id="sSig2" type="text" maxlength="60"></div>
+        </div>
+        <div class="row3">
+          <div class="field"><label for="sPrefix">Property No. prefix</label><input id="sPrefix" class="mono" type="text" maxlength="24"></div>
+          <div class="field"><label for="sYear">Year</label><input id="sYear" class="mono" type="text" maxlength="4" inputmode="numeric"></div>
+          <div class="field"><label for="sDigits">Number length</label><select id="sDigits"><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label for="sWidth">Sticker width (cm)</label><input id="sWidth" type="number" min="8" max="20" step="0.5"></div>
+          <div class="field"><label for="sLogoFile">Logo (image)</label>
+            <div class="logorow"><input id="sLogoFile" type="file" accept="image/*"><img id="logoPrev" alt="Logo" hidden><button type="button" class="small" id="logoClear" hidden>Remove</button></div></div>
+        </div>
+        <p class="hint">Changes are saved automatically.</p>
+      </form>
+    </div>
+  </section>
+</section>
+```
