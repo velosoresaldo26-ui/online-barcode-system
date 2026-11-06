@@ -145,7 +145,6 @@ const extractNo=t=>{try{return new URL(t).searchParams.get('no')||t}catch{return
 function qrURL(text){const t=$('qrTmp');t.innerHTML='';new QRCode(t,{text,width:256,height:256,correctLevel:QRCode.CorrectLevel.M});
  const c=t.querySelector('canvas');return c?c.toDataURL('image/png'):''}
  
-// Sync function fixed to handle edits
 function sync(p,oldNo){if(!set.sheet)return;
  const d={};FIELDS.forEach(k=>d[k]=p[k]||'');
  if(oldNo&&oldNo!==p.property_no)d.old_property_no=oldNo;
@@ -193,12 +192,12 @@ $('propForm').onsubmit=e=>{
  if(!p.property_no||!p.articles){er.textContent='Property No. and Articles are required.';er.hidden=false;return}
  if(db.some(x=>x.property_no===p.property_no&&x.property_no!==editing)){er.textContent='That Property No. already exists.';er.hidden=false;return}
  
- const oldNo=editing; // Save old No. for sync
+ const oldNo=editing;
  
  if(editing){const i=db.findIndex(x=>x.property_no===editing);p.added=db[i].added;db[i]=p}else{p.added=Date.now();db.push(p)}
  save('ps_data',db);
- bumpCounter(p.property_no); // Prevent duplicates
- sync(p,oldNo); // Sync with oldNo support
+ bumpCounter(p.property_no);
+ sync(p,oldNo);
  show(p);resetForm();render()
 };
 function edit(no){const p=db.find(x=>x.property_no===no);if(!p)return;editing=no;for(const k in fm)$(fm[k]).value=p[k]||'';
@@ -247,16 +246,49 @@ $('importFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new
  save('ps_data',db);render();resetForm();alert(n+' imported.')};rd.readAsText(f);e.target.value=''};
 $('syncAll').onclick=()=>{if(!set.sheet)return alert('Paste the Google Sheet Web App URL in Settings first.');
  db.forEach((p,i)=>setTimeout(()=>sync(p),i*250));alert('Sending '+db.length+' properties to the sheet.')};
+
+// --- JSONP LOAD FROM SHEET (CORS FIX for Render) ---
 function loadSheet(silent){
  if(!set.sheet){if(!silent)alert('Paste the Web App URL in Settings first.');return}
- fetch(set.sheet).then(r=>r.json()).then(rows=>{
-  if(!Array.isArray(rows))throw 0;let n=0;
-  rows.forEach(r=>{const p={};FIELDS.forEach(k=>p[k]=String(r[k]==null?'':r[k]).trim());
-   if(p.property_no&&!db.some(x=>x.property_no===p.property_no)){p.added=Date.now();db.push(p);bumpCounter(p.property_no);n++}});
-  if(n)save('ps_data',db);
-  if(!editing)$('fNo').value=nextNo();
-  render();if(!silent)alert(n+' loaded from the sheet.')
- }).catch(()=>{if(!silent)alert('Could not load from the sheet. Check the Web App URL and that access is set to Anyone.')})}
+ 
+ const callbackName = 'jsonpCallback_' + Date.now();
+ 
+ window[callbackName] = function(rows) {
+  try {
+   if (!Array.isArray(rows)) throw 0;
+   let n = 0;
+   rows.forEach(r => {
+    const p = {};
+    FIELDS.forEach(k => p[k] = String(r[k] == null ? '' : r[k]).trim());
+    if (p.property_no && !db.some(x => x.property_no === p.property_no)) {
+     p.added = Date.now();
+     db.push(p);
+     bumpCounter(p.property_no);
+     n++;
+    }
+   });
+   if (n) save('ps_data', db);
+   if (!editing) $('fNo').value = nextNo();
+   render();
+   if (!silent) alert(n + ' loaded from the sheet.');
+  } catch (e) {
+   if (!silent) alert('Invalid data format from sheet.');
+  } finally {
+   delete window[callbackName];
+   if (scriptTag.parentNode) scriptTag.parentNode.removeChild(scriptTag);
+  }
+ };
+
+ const scriptTag = document.createElement('script');
+ scriptTag.src = set.sheet + '?callback=' + callbackName;
+ scriptTag.onerror = function() {
+  if (!silent) alert('Could not load from the sheet. Check the URL and network.');
+  delete window[callbackName];
+  if (scriptTag.parentNode) scriptTag.parentNode.removeChild(scriptTag);
+ };
+ document.body.appendChild(scriptTag);
+}
+
 $('loadSheet').onclick=()=>loadSheet(false);
 $('wipe').onclick=()=>{$('wipeAsk').hidden=false};$('wipeNo').onclick=()=>{$('wipeAsk').hidden=true};
 $('wipeYes').onclick=()=>{db=[];save('ps_data',db);show(null);$('wipeAsk').hidden=true;resetForm();render()};
