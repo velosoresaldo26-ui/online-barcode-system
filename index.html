@@ -34,10 +34,32 @@ table{width:100%;border-collapse:collapse}th,td{padding:8px;border-bottom:1px so
 .bar{display:flex;align-items:center;gap:8px;margin-bottom:6px}.bar i{display:block;height:16px;background:var(--g);border-radius:3px;min-width:2px}.bar span{width:150px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .view[hidden]{display:none}
 #scanBox{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}#scanBox input[type=text]{flex:1;min-width:200px;width:auto}
+/* Login Screen CSS */
+#loginScreen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999}
 </style></head><body>
-<nav><b>Property Sticker System</b>
-<a href="#dashboard">Dashboard</a><a href="#list">Property List</a><a href="#analytics">Analytics</a><a href="#setup">Settings</a></nav>
-<main>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen">
+  <div class="panel" style="width:100%;max-width:350px;margin:20px;">
+    <header><h2>System Login</h2></header>
+    <div class="pbody">
+      <form id="loginForm" autocomplete="off">
+        <div class="field"><label for="logUser">Username</label><input id="logUser" required></div>
+        <div class="field"><label for="logPass">Password</label><input id="logPass" type="password" required></div>
+        <p class="error" id="logErr" hidden></p>
+        <button class="primary" type="submit" style="width:100%;margin-top:10px;" id="logBtn">Login</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP (Hidden initially) -->
+<nav id="mainNav" style="display:none;"><b>Property Sticker System</b>
+<a href="#dashboard">Dashboard</a><a href="#list">Property List</a><a href="#analytics">Analytics</a><a href="#setup">Settings</a>
+<button type="button" onclick="logout()" style="margin-left:auto;background:transparent;color:#fff;border:none;cursor:pointer;">Logout</button>
+</nav>
+
+<main id="mainApp" style="display:none;">
 
 <section class="view" id="v-dashboard">
 <div id="scanBox"><input id="scan" type="text" placeholder="Scan QR code here (scanner presses Enter)" autocomplete="off">
@@ -122,14 +144,26 @@ const qrValue=no=>set.sheet?set.sheet+'?no='+encodeURIComponent(no):no;
 const extractNo=t=>{try{return new URL(t).searchParams.get('no')||t}catch{return t}};
 function qrURL(text){const t=$('qrTmp');t.innerHTML='';new QRCode(t,{text,width:256,height:256,correctLevel:QRCode.CorrectLevel.M});
  const c=t.querySelector('canvas');return c?c.toDataURL('image/png'):''}
-function sync(p){if(!set.sheet)return;
+ 
+// Sync function fixed to handle edits
+function sync(p,oldNo){if(!set.sheet)return;
  const d={};FIELDS.forEach(k=>d[k]=p[k]||'');
+ if(oldNo&&oldNo!==p.property_no)d.old_property_no=oldNo;
  fetch(set.sheet,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(d)}).catch(()=>{})}
 
 // ---- numbering ----
-function nextNo(){const pre=`${set.prefix}-${set.year}-`;let m=0;
+function nextNo(){
+ const pre=`${set.prefix}-${set.year}-`;
+ let m=parseInt(localStorage.getItem('ps_counter')||'0',10)||0;
  db.forEach(p=>{if(p.property_no.startsWith(pre)){const n=parseInt(p.property_no.slice(pre.length),10);if(n>m)m=n}});
- return pre+String(m+1).padStart(+set.digits,'0')}
+ return pre+String(m+1).padStart(+set.digits,'0')
+}
+function bumpCounter(no){
+ const pre=`${set.prefix}-${set.year}-`;
+ if(!no.startsWith(pre))return;
+ const n=parseInt(no.slice(pre.length),10);
+ if(Number.isFinite(n))localStorage.setItem('ps_counter',String(Math.max(n,parseInt(localStorage.getItem('ps_counter')||'0',10)||0)))
+}
 
 // ---- sticker ----
 function stickerHTML(p){const qr=qrURL(qrValue(p.property_no));
@@ -153,12 +187,20 @@ const fm={property_no:'fNo',location:'fLoc',ics:'fIcs',articles:'fArt',end_user:
 function resetForm(){editing=null;Object.values(fm).forEach(i=>$(i).value='');$('fNo').value=nextNo();$('fDate').value=new Date().toISOString().slice(0,10);
  $('hAddTxt').textContent='Add Property';$('saveTxt').textContent='Add and generate QR code';$('formError').hidden=true}
 $('resetBtn').onclick=resetForm;
-$('propForm').onsubmit=e=>{e.preventDefault();const p={};for(const k in fm)p[k]=$(fm[k]).value.trim();
+$('propForm').onsubmit=e=>{
+ e.preventDefault();const p={};for(const k in fm)p[k]=$(fm[k]).value.trim();
  const er=$('formError');
  if(!p.property_no||!p.articles){er.textContent='Property No. and Articles are required.';er.hidden=false;return}
  if(db.some(x=>x.property_no===p.property_no&&x.property_no!==editing)){er.textContent='That Property No. already exists.';er.hidden=false;return}
+ 
+ const oldNo=editing; // Save old No. for sync
+ 
  if(editing){const i=db.findIndex(x=>x.property_no===editing);p.added=db[i].added;db[i]=p}else{p.added=Date.now();db.push(p)}
- save('ps_data',db);sync(p);show(p);resetForm();render()};
+ save('ps_data',db);
+ bumpCounter(p.property_no); // Prevent duplicates
+ sync(p,oldNo); // Sync with oldNo support
+ show(p);resetForm();render()
+};
 function edit(no){const p=db.find(x=>x.property_no===no);if(!p)return;editing=no;for(const k in fm)$(fm[k]).value=p[k]||'';
  $('hAddTxt').textContent='Edit Property';$('saveTxt').textContent='Save changes';location.hash='#dashboard';show(p)}
 
@@ -201,7 +243,7 @@ function parseCSV(t){const r=[];let row=[],f='',q=false;for(let i=0;i<t.length;i
 $('importFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();
  rd.onload=()=>{const rows=parseCSV(rd.result);const h=rows.shift().map(x=>x.trim().toLowerCase());let n=0;
  rows.forEach(r=>{const p={};FIELDS.forEach(k=>p[k]=(r[h.indexOf(k)]||'').trim());
- if(p.property_no&&!db.some(x=>x.property_no===p.property_no)){p.added=Date.now();db.push(p);n++}});
+ if(p.property_no&&!db.some(x=>x.property_no===p.property_no)){p.added=Date.now();db.push(p);bumpCounter(p.property_no);n++}});
  save('ps_data',db);render();resetForm();alert(n+' imported.')};rd.readAsText(f);e.target.value=''};
 $('syncAll').onclick=()=>{if(!set.sheet)return alert('Paste the Google Sheet Web App URL in Settings first.');
  db.forEach((p,i)=>setTimeout(()=>sync(p),i*250));alert('Sending '+db.length+' properties to the sheet.')};
@@ -210,7 +252,7 @@ function loadSheet(silent){
  fetch(set.sheet).then(r=>r.json()).then(rows=>{
   if(!Array.isArray(rows))throw 0;let n=0;
   rows.forEach(r=>{const p={};FIELDS.forEach(k=>p[k]=String(r[k]==null?'':r[k]).trim());
-   if(p.property_no&&!db.some(x=>x.property_no===p.property_no)){p.added=Date.now();db.push(p);n++}});
+   if(p.property_no&&!db.some(x=>x.property_no===p.property_no)){p.added=Date.now();db.push(p);bumpCounter(p.property_no);n++}});
   if(n)save('ps_data',db);
   if(!editing)$('fNo').value=nextNo();
   render();if(!silent)alert(n+' loaded from the sheet.')
@@ -228,5 +270,70 @@ $('logoClear').onclick=()=>{set.logo='';save('ps_set',set);if(cur)show(cur)};
 // ---- routing ----
 function route(){const v=(location.hash||'#dashboard').slice(1);document.querySelectorAll('.view').forEach(s=>s.hidden=s.id!=='v-'+v);
  document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+v));render()}
-addEventListener('hashchange',route);resetForm();show(null);route();loadSheet(true);
+addEventListener('hashchange',route);
+
+// ---- LOGIN LOGIC ----
+function checkLogin() {
+  if (localStorage.getItem('ps_loggedin') === 'true') {
+    $('loginScreen').style.display = 'none';
+    $('mainNav').style.display = 'flex';
+    $('mainApp').style.display = 'block';
+    resetForm(); show(null); route(); loadSheet(true);
+  }
+}
+
+$('loginForm').onsubmit = async (e) => {
+  e.preventDefault();
+  const btn = $('logBtn');
+  const err = $('logErr');
+  btn.textContent = 'Checking...';
+  btn.disabled = true;
+  err.hidden = true;
+
+  const url = set.sheet; 
+  if (!url) {
+    if(confirm("Walang naka-set na Google Sheet URL. I-bypass muna ang login para makapunta sa Settings?")) {
+        localStorage.setItem('ps_loggedin', 'true');
+        $('loginScreen').style.display = 'none';
+        $('mainNav').style.display = 'flex';
+        $('mainApp').style.display = 'block';
+        location.hash = '#setup';
+        resetForm(); route();
+    } else {
+        btn.textContent = 'Login'; btn.disabled = false;
+    }
+    return;
+  }
+
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'login', username: $('logUser').value, password: $('logPass').value })
+    });
+    const data = await res.json();
+    
+    if (data.ok) {
+      localStorage.setItem('ps_loggedin', 'true');
+      $('loginScreen').style.display = 'none';
+      $('mainNav').style.display = 'flex';
+      $('mainApp').style.display = 'block';
+      resetForm(); show(null); route(); loadSheet(true);
+    } else {
+      err.textContent = data.error || 'Mali ang username o password.';
+      err.hidden = false;
+    }
+  } catch (error) {
+    err.textContent = 'Network error. Check your Google Sheet URL.';
+    err.hidden = false;
+  }
+  btn.textContent = 'Login'; btn.disabled = false;
+};
+
+function logout() {
+  localStorage.removeItem('ps_loggedin');
+  location.reload();
+}
+
+// Start the app
+checkLogin();
 </script></body></html>
