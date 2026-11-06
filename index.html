@@ -135,8 +135,12 @@ const FIELDS=['property_no','location','articles','end_user','accountable_person
 const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}};
 const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){alert('Storage full or blocked.')}};
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+const DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbxxcCKAF9-nWXXndoBOSc1mtScnVKa7ZMgfwPazL5Jeudxk2xhpZ56rvoqkWmzU9gDQIA/exec';
+
 let db=load('ps_data',[]);
-let set=Object.assign({sheet:'',line1:'Republic of the Philippines',line2:'Your Agency Name',sig0:'',sig1:'',sig2:'',prefix:'PROP',year:String(new Date().getFullYear()),digits:4,width:12,logo:''},load('ps_set',{}));
+let set=Object.assign({sheet:DEFAULT_URL,line1:'Republic of the Philippines',line2:'Your Agency Name',sig0:'',sig1:'',sig2:'',prefix:'PROP',year:String(new Date().getFullYear()),digits:4,width:12,logo:''},load('ps_set',{}));
+if (!set.sheet) set.sheet = DEFAULT_URL; // Force the URL if it was previously empty
 let scans=load('ps_scans',0),cur=null,editing=null;
 
 // ---- QR + sheet ----
@@ -323,20 +327,7 @@ $('loginForm').onsubmit = async (e) => {
   err.hidden = true;
 
   const url = set.sheet; 
-  if (!url) {
-    if(confirm("Walang naka-set na Google Sheet URL. I-bypass muna ang login para makapunta sa Settings?")) {
-        localStorage.setItem('ps_loggedin', 'true');
-        $('loginScreen').style.display = 'none';
-        $('mainNav').style.display = 'flex';
-        $('mainApp').style.display = 'block';
-        location.hash = '#setup';
-        resetForm(); route();
-    } else {
-        btn.textContent = 'Login'; btn.disabled = false;
-    }
-    return;
-  }
-
+  
   try {
     const res = await fetch(url, {
       method: 'POST',
@@ -355,7 +346,7 @@ $('loginForm').onsubmit = async (e) => {
       err.hidden = false;
     }
   } catch (error) {
-    err.textContent = 'Network error. Check your Google Sheet URL.';
+    err.textContent = 'Network error. Check your Google Sheet URL or Internet connection.';
     err.hidden = false;
   }
   btn.textContent = 'Login'; btn.disabled = false;
