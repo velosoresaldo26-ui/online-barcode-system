@@ -246,7 +246,7 @@ function route(){const v=(location.hash||'#dashboard').slice(1);document.querySe
  document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+v));render()}
 addEventListener('hashchange',route);
 $('lUrl').value=set.sheet||'';
-$('lUrl').readOnly=true;$('lUrl').style.background='#f1f5f9';$('sSheet').readOnly=true;
+$('lUrl').parentElement.style.display='none';$('sSheet').parentElement.style.display='none';
 if(token){$('who').textContent=who;showLogin(false)}else{db=[];try{localStorage.removeItem('ps_data')}catch(e){}showLogin(true)}
 resetForm();show(null);route();
 if(token)loadSheet(true);
