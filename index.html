@@ -120,7 +120,7 @@ const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{retur
 const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){alert('Storage full or blocked.')}};
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 let db=load('ps_data',[]);
-const DEFAULT_URL='https://script.google.com/macros/s/AKfycbwpoeDIjIam6GfFZ2PygZ4r1WeXD_iwSX9PQTp5doZgwp29CQBMngag6Z7FG7Vw390SLA/exec';
+const DEFAULT_URL='https://script.google.com/macros/s/AKfycbz0CP6AuWd2knZYK8qFzP8KmpfzZlxBbCp-8WC1ugvjKQ9VGejsgIZNJ7dLx9CaH0FOyA/exec';
 let set=Object.assign({sheet:DEFAULT_URL,line1:'Republic of the Philippines',line2:'Your Agency Name',sig0:'',sig1:'',sig2:'',prefix:'PROP',year:String(new Date().getFullYear()),digits:4,width:12,logo:''},load('ps_set',{}));
 let scans=load('ps_scans',0),cur=null,editing=null;
 if(!set.sheet)set.sheet=DEFAULT_URL; // gamitin ang URL sa file kung walang naka-save sa device
@@ -135,7 +135,7 @@ function showLogin(on){$('login').style.display=on?'flex':'none'}
 function logoutLocal(){token=null;who='';save('ps_tok',null);save('ps_who','');db=[];try{localStorage.removeItem('ps_data')}catch(e){}show(null);render();$('who').textContent='';showLogin(true)}
 $('logout').onclick=async()=>{try{await api('logout')}catch(e){}logoutLocal()};
 $('loginForm').onsubmit=async e=>{e.preventDefault();const er=$('lErr');er.hidden=true;
- set.sheet=$('lUrl').value.trim();save('ps_set',set);$('sSheet').value=set.sheet;
+ set.sheet=$('lUrl').value.trim()||DEFAULT_URL;save('ps_set',set);$('sSheet').value=set.sheet;
  try{const j=await api('login',{username:$('lUser').value.trim(),password:$('lPass').value});
   token=j.token;who=j.user;save('ps_tok',token);save('ps_who',who);$('lPass').value='';
   $('who').textContent=who;showLogin(false);await loadSheet(true);resetForm()}
