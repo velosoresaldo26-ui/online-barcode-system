@@ -120,10 +120,10 @@ const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{retur
 const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){alert('Storage full or blocked.')}};
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 let db=load('ps_data',[]);
-const DEFAULT_URL='https://script.google.com/macros/s/AKfycbz0CP6AuWd2knZYK8qFzP8KmpfzZlxBbCp-8WC1ugvjKQ9VGejsgIZNJ7dLx9CaH0FOyA/exec';
+const DEFAULT_URL='https://script.google.com/macros/s/AKfycbyCHbCpZMGaZPbaV8sn0vkHwWP-k4Gj5GrZxW-jVnUcrjMb1dAUDVdCXbagsm8ReA7IZw/exec';
 let set=Object.assign({sheet:DEFAULT_URL,line1:'Republic of the Philippines',line2:'Your Agency Name',sig0:'',sig1:'',sig2:'',prefix:'PROP',year:String(new Date().getFullYear()),digits:4,width:12,logo:''},load('ps_set',{}));
 let scans=load('ps_scans',0),cur=null,editing=null;
-if(!set.sheet)set.sheet=DEFAULT_URL; // gamitin ang URL sa file kung walang naka-save sa device
+set.sheet=DEFAULT_URL; // laging ang URL sa file ang gamit, hindi na naeedit
 let token=load('ps_tok',null),who=load('ps_who','');
 async function api(action,data){
  if(!set.sheet)throw new Error('Enter the Web App URL.');
@@ -135,7 +135,7 @@ function showLogin(on){$('login').style.display=on?'flex':'none'}
 function logoutLocal(){token=null;who='';save('ps_tok',null);save('ps_who','');db=[];try{localStorage.removeItem('ps_data')}catch(e){}show(null);render();$('who').textContent='';showLogin(true)}
 $('logout').onclick=async()=>{try{await api('logout')}catch(e){}logoutLocal()};
 $('loginForm').onsubmit=async e=>{e.preventDefault();const er=$('lErr');er.hidden=true;
- set.sheet=$('lUrl').value.trim()||DEFAULT_URL;save('ps_set',set);$('sSheet').value=set.sheet;
+ set.sheet=DEFAULT_URL;save('ps_set',set);$('sSheet').value=set.sheet;
  try{const j=await api('login',{username:$('lUser').value.trim(),password:$('lPass').value});
   token=j.token;who=j.user;save('ps_tok',token);save('ps_who',who);$('lPass').value='';
   $('who').textContent=who;showLogin(false);await loadSheet(true);resetForm()}
@@ -246,6 +246,7 @@ function route(){const v=(location.hash||'#dashboard').slice(1);document.querySe
  document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+v));render()}
 addEventListener('hashchange',route);
 $('lUrl').value=set.sheet||'';
+$('lUrl').readOnly=true;$('lUrl').style.background='#f1f5f9';$('sSheet').readOnly=true;
 if(token){$('who').textContent=who;showLogin(false)}else{db=[];try{localStorage.removeItem('ps_data')}catch(e){}showLogin(true)}
 resetForm();show(null);route();
 if(token)loadSheet(true);
