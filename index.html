@@ -123,7 +123,7 @@ let db=load('ps_data',[]);
 const DEFAULT_URL='https://script.google.com/macros/s/AKfycbwpoeDIjIam6GfFZ2PygZ4r1WeXD_iwSX9PQTp5doZgwp29CQBMngag6Z7FG7Vw390SLA/exec';
 let set=Object.assign({sheet:DEFAULT_URL,line1:'Republic of the Philippines',line2:'Your Agency Name',sig0:'',sig1:'',sig2:'',prefix:'PROP',year:String(new Date().getFullYear()),digits:4,width:12,logo:''},load('ps_set',{}));
 let scans=load('ps_scans',0),cur=null,editing=null;
-if(!set.sheet)set.sheet=DEFAULT_URL;
+if(DEFAULT_URL)set.sheet=DEFAULT_URL; // laging ang URL sa file ang gagamitin
 let token=load('ps_tok',null),who=load('ps_who','');
 async function api(action,data){
  if(!set.sheet)throw new Error('Enter the Web App URL.');
@@ -246,6 +246,7 @@ function route(){const v=(location.hash||'#dashboard').slice(1);document.querySe
  document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+v));render()}
 addEventListener('hashchange',route);
 $('lUrl').value=set.sheet||'';
+if(DEFAULT_URL){$('lUrl').parentElement.style.display='none';$('sSheet').readOnly=true}
 if(token){$('who').textContent=who;showLogin(false)}else{db=[];try{localStorage.removeItem('ps_data')}catch(e){}showLogin(true)}
 resetForm();show(null);route();
 if(token)loadSheet(true);
