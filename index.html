@@ -34,32 +34,18 @@ table{width:100%;border-collapse:collapse}th,td{padding:8px;border-bottom:1px so
 .bar{display:flex;align-items:center;gap:8px;margin-bottom:6px}.bar i{display:block;height:16px;background:var(--g);border-radius:3px;min-width:2px}.bar span{width:150px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .view[hidden]{display:none}
 #scanBox{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}#scanBox input[type=text]{flex:1;min-width:200px;width:auto}
-/* Login Screen CSS */
-#loginScreen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999}
 </style></head><body>
-
-<!-- LOGIN SCREEN -->
-<div id="loginScreen">
-  <div class="panel" style="width:100%;max-width:350px;margin:20px;">
-    <header><h2>System Login</h2></header>
-    <div class="pbody">
-      <form id="loginForm" autocomplete="off">
-        <div class="field"><label for="logUser">Username</label><input id="logUser" required></div>
-        <div class="field"><label for="logPass">Password</label><input id="logPass" type="password" required></div>
-        <p class="error" id="logErr" hidden></p>
-        <button class="primary" type="submit" style="width:100%;margin-top:10px;" id="logBtn">Login</button>
-      </form>
-    </div>
-  </div>
-</div>
-
-<!-- MAIN APP (Hidden initially) -->
-<nav id="mainNav" style="display:none;"><b>Property Sticker System</b>
-<a href="#dashboard">Dashboard</a><a href="#list">Property List</a><a href="#analytics">Analytics</a><a href="#setup">Settings</a>
-<button type="button" onclick="logout()" style="margin-left:auto;background:transparent;color:#fff;border:none;cursor:pointer;">Logout</button>
-</nav>
-
-<main id="mainApp" style="display:none;">
+<nav><b>Property Sticker System</b>
+<a href="#dashboard">Dashboard</a><a href="#list">Property List</a><a href="#analytics">Analytics</a><a href="#setup">Settings</a><span id="who" style="margin-left:auto;color:#cbd5e1;padding:0 8px"></span><button type="button" class="small" id="logout">Logout</button></nav>
+<div id="login" style="position:fixed;inset:0;z-index:9;background:#f1f5f9;display:flex;align-items:center;justify-content:center">
+<form id="loginForm" class="panel" style="width:340px;max-width:92vw;padding:18px;margin:0" autocomplete="off">
+<h2 style="margin:0 0 12px">Property Sticker System</h2>
+<div class="field"><label for="lUrl">Google Sheet Web App URL</label><input id="lUrl" class="mono" placeholder="https://script.google.com/macros/s/.../exec"></div>
+<div class="field"><label for="lUser">Username</label><input id="lUser" autocomplete="username"></div>
+<div class="field"><label for="lPass">Password</label><input id="lPass" type="password" autocomplete="current-password"></div>
+<p class="error" id="lErr" hidden></p>
+<button class="primary" type="submit" style="width:100%">Login</button></form></div>
+<main>
 
 <section class="view" id="v-dashboard">
 <div id="scanBox"><input id="scan" type="text" placeholder="Scan QR code here (scanner presses Enter)" autocomplete="off">
@@ -68,7 +54,7 @@ table{width:100%;border-collapse:collapse}th,td{padding:8px;border-bottom:1px so
 <div class="stats">
 <div class="stat"><b id="stTotal">0</b><span>Total Properties</span></div>
 <div class="stat"><b id="stScans">0</b><span>Total Scans</span></div>
-<div class="stat"><b id="stMonth">0</b><span>Added This Month</span></div>
+<div class="stat"><b id="stMonth">0</b><span>Acquired This Month</span></div>
 <div class="stat"><b id="stStore">0 KB</b><span>Storage Used</span></div></div>
 <div class="cols">
 <section class="panel"><header><h2 id="hAddTxt">Add Property</h2></header><div class="pbody">
@@ -90,18 +76,16 @@ table{width:100%;border-collapse:collapse}th,td{padding:8px;border-bottom:1px so
 <button type="button" class="violet" id="dlLabel">Download PNG</button></div>
 <p class="hint">Print and Download work when the page is opened in your own browser (GitHub Pages), not inside a preview.</p></div></section></div>
 <section class="panel"><header><h2>Recent Properties</h2><a href="#list">View All</a></header>
-<div class="tablewrap"><table><thead><tr><th>#</th><th>Property No.</th><th>Articles</th><th>Accountable</th><th>Added</th><th style="text-align:right">Actions</th></tr></thead><tbody id="recentRows"></tbody></table></div></section>
+<div class="tablewrap"><table><thead><tr><th>#</th><th>Property No.</th><th>Articles</th><th>Accountable</th><th>Date</th><th style="text-align:right">Actions</th></tr></thead><tbody id="recentRows"></tbody></table></div></section>
 </section>
 
 <section class="view" id="v-list" hidden>
 <section class="panel"><header><h2>Property List</h2></header><div class="pbody">
 <div class="toolbar"><input id="search" type="search" placeholder="Search properties">
 <button type="button" class="violet" id="loadSheet">Load from Sheet</button>
-<button type="button" class="blue" id="syncAll">Sync All to Sheet</button>
 <button type="button" id="copyCsv">Copy CSV</button>
 <button type="button" id="importBtn">Import CSV</button><input id="importFile" type="file" accept=".csv,text/csv" hidden>
-<button type="button" class="danger" id="wipe">Delete All</button>
-<span id="wipeAsk" hidden>Are you sure? <button type="button" class="small danger" id="wipeYes">Yes, delete</button> <button type="button" class="small" id="wipeNo">No</button></span></div>
+</div>
 <div class="tablewrap" style="margin-top:10px"><table><thead><tr><th>#</th><th>Property No.</th><th>Articles</th><th>Accountable</th><th>Location</th><th style="text-align:right">Actions</th></tr></thead><tbody id="allRows"></tbody></table></div>
 <p class="hint">CSV columns: property_no, location, articles, end_user, accountable_person, date_acquired, ics.</p>
 <textarea id="csvOut" readonly hidden></textarea></div></section></section>
@@ -135,38 +119,38 @@ const FIELDS=['property_no','location','articles','end_user','accountable_person
 const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}};
 const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){alert('Storage full or blocked.')}};
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-
-const DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbxxcCKAF9-nWXXndoBOSc1mtScnVKa7ZMgfwPazL5Jeudxk2xhpZ56rvoqkWmzU9gDQIA/exec';
-
 let db=load('ps_data',[]);
+const DEFAULT_URL='https://script.google.com/macros/s/AKfycbwpoeDIjIam6GfFZ2PygZ4r1WeXD_iwSX9PQTp5doZgwp29CQBMngag6Z7FG7Vw390SLA/exec';
 let set=Object.assign({sheet:DEFAULT_URL,line1:'Republic of the Philippines',line2:'Your Agency Name',sig0:'',sig1:'',sig2:'',prefix:'PROP',year:String(new Date().getFullYear()),digits:4,width:12,logo:''},load('ps_set',{}));
-if (!set.sheet) set.sheet = DEFAULT_URL; // Force the URL if it was previously empty
 let scans=load('ps_scans',0),cur=null,editing=null;
+if(!set.sheet)set.sheet=DEFAULT_URL;
+let token=load('ps_tok',null),who=load('ps_who','');
+async function api(action,data){
+ if(!set.sheet)throw new Error('Enter the Web App URL.');
+ let j;try{const r=await fetch(set.sheet,{method:'POST',body:JSON.stringify(Object.assign({action,token},data||{}))});j=await r.json()}
+ catch(e){throw new Error('Cannot reach the sheet. Check the Web App URL and your internet.')}
+ if(j.error==='auth'){logoutLocal();throw new Error('Session expired. Please login again.')}
+ if(j.error)throw new Error(j.error);return j}
+function showLogin(on){$('login').style.display=on?'flex':'none'}
+function logoutLocal(){token=null;who='';save('ps_tok',null);save('ps_who','');db=[];try{localStorage.removeItem('ps_data')}catch(e){}show(null);render();$('who').textContent='';showLogin(true)}
+$('logout').onclick=async()=>{try{await api('logout')}catch(e){}logoutLocal()};
+$('loginForm').onsubmit=async e=>{e.preventDefault();const er=$('lErr');er.hidden=true;
+ set.sheet=$('lUrl').value.trim();save('ps_set',set);$('sSheet').value=set.sheet;
+ try{const j=await api('login',{username:$('lUser').value.trim(),password:$('lPass').value});
+  token=j.token;who=j.user;save('ps_tok',token);save('ps_who',who);$('lPass').value='';
+  $('who').textContent=who;showLogin(false);await loadSheet(true);resetForm()}
+ catch(x){er.textContent=x.message;er.hidden=false}};
 
 // ---- QR + sheet ----
 const qrValue=no=>set.sheet?set.sheet+'?no='+encodeURIComponent(no):no;
 const extractNo=t=>{try{return new URL(t).searchParams.get('no')||t}catch{return t}};
 function qrURL(text){const t=$('qrTmp');t.innerHTML='';new QRCode(t,{text,width:256,height:256,correctLevel:QRCode.CorrectLevel.M});
  const c=t.querySelector('canvas');return c?c.toDataURL('image/png'):''}
- 
-function sync(p,oldNo){if(!set.sheet)return;
- const d={};FIELDS.forEach(k=>d[k]=p[k]||'');
- if(oldNo&&oldNo!==p.property_no)d.old_property_no=oldNo;
- fetch(set.sheet,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(d)}).catch(()=>{})}
 
 // ---- numbering ----
-function nextNo(){
- const pre=`${set.prefix}-${set.year}-`;
- let m=parseInt(localStorage.getItem('ps_counter')||'0',10)||0;
+function nextNo(){const pre=`${set.prefix}-${set.year}-`;let m=0;
  db.forEach(p=>{if(p.property_no.startsWith(pre)){const n=parseInt(p.property_no.slice(pre.length),10);if(n>m)m=n}});
- return pre+String(m+1).padStart(+set.digits,'0')
-}
-function bumpCounter(no){
- const pre=`${set.prefix}-${set.year}-`;
- if(!no.startsWith(pre))return;
- const n=parseInt(no.slice(pre.length),10);
- if(Number.isFinite(n))localStorage.setItem('ps_counter',String(Math.max(n,parseInt(localStorage.getItem('ps_counter')||'0',10)||0)))
-}
+ return pre+String(m+1).padStart(+set.digits,'0')}
 
 // ---- sticker ----
 function stickerHTML(p){const qr=qrURL(qrValue(p.property_no));
@@ -190,20 +174,16 @@ const fm={property_no:'fNo',location:'fLoc',ics:'fIcs',articles:'fArt',end_user:
 function resetForm(){editing=null;Object.values(fm).forEach(i=>$(i).value='');$('fNo').value=nextNo();$('fDate').value=new Date().toISOString().slice(0,10);
  $('hAddTxt').textContent='Add Property';$('saveTxt').textContent='Add and generate QR code';$('formError').hidden=true}
 $('resetBtn').onclick=resetForm;
-$('propForm').onsubmit=e=>{
- e.preventDefault();const p={};for(const k in fm)p[k]=$(fm[k]).value.trim();
- const er=$('formError');
+$('propForm').onsubmit=async e=>{e.preventDefault();const p={};for(const k in fm)p[k]=$(fm[k]).value.trim();
+ const er=$('formError');er.hidden=true;
  if(!p.property_no||!p.articles){er.textContent='Property No. and Articles are required.';er.hidden=false;return}
  if(db.some(x=>x.property_no===p.property_no&&x.property_no!==editing)){er.textContent='That Property No. already exists.';er.hidden=false;return}
- 
- const oldNo=editing;
- 
- if(editing){const i=db.findIndex(x=>x.property_no===editing);p.added=db[i].added;db[i]=p}else{p.added=Date.now();db.push(p)}
- save('ps_data',db);
- bumpCounter(p.property_no);
- sync(p,oldNo);
- show(p);resetForm();render()
-};
+ const b=$('saveTxt');b.disabled=true;
+ try{await api('save',{record:p,original:editing||''});
+  if(editing){const i=db.findIndex(x=>x.property_no===editing);db[i]=p}else db.push(p);
+  save('ps_data',db);show(p);resetForm();render()}
+ catch(x){er.textContent=x.message;er.hidden=false}
+ b.disabled=false};
 function edit(no){const p=db.find(x=>x.property_no===no);if(!p)return;editing=no;for(const k in fm)$(fm[k]).value=p[k]||'';
  $('hAddTxt').textContent='Edit Property';$('saveTxt').textContent='Save changes';location.hash='#dashboard';show(p)}
 
@@ -212,12 +192,12 @@ function actions(p){return `<button class="small" data-a="v" data-n="${esc(p.pro
 document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;const n=b.dataset.n;
  if(b.dataset.a==='v'){show(db.find(x=>x.property_no===n));location.hash='#dashboard';scrollTo(0,0)}
  if(b.dataset.a==='e')edit(n);
- if(b.dataset.a==='d'&&confirm('Delete '+n+'?')){db=db.filter(x=>x.property_no!==n);save('ps_data',db);if(cur&&cur.property_no===n)show(null);render()}});
+ if(b.dataset.a==='d'&&confirm('Delete '+n+'?')){api('delete',{property_no:n}).then(()=>{db=db.filter(x=>x.property_no!==n);save('ps_data',db);if(cur&&cur.property_no===n)show(null);render()}).catch(x=>alert(x.message))}});
 function render(){const q=$('search').value.toLowerCase();
- $('recentRows').innerHTML=[...db].reverse().slice(0,5).map((p,i)=>`<tr><td>${i+1}</td><td class="mono">${esc(p.property_no)}</td><td>${esc(p.articles)}</td><td>${esc(p.accountable_person)}</td><td>${p.added?new Date(p.added).toLocaleDateString():''}</td><td style="text-align:right">${actions(p)}</td></tr>`).join('')||'<tr><td colspan=6 class="hint">No properties yet.</td></tr>';
+ $('recentRows').innerHTML=[...db].reverse().slice(0,5).map((p,i)=>`<tr><td>${i+1}</td><td class="mono">${esc(p.property_no)}</td><td>${esc(p.articles)}</td><td>${esc(p.accountable_person)}</td><td>${esc(p.date_acquired)}</td><td style="text-align:right">${actions(p)}</td></tr>`).join('')||'<tr><td colspan=6 class="hint">No properties yet.</td></tr>';
  $('allRows').innerHTML=db.filter(p=>!q||JSON.stringify(p).toLowerCase().includes(q)).map((p,i)=>`<tr><td>${i+1}</td><td class="mono">${esc(p.property_no)}</td><td>${esc(p.articles)}</td><td>${esc(p.accountable_person)}</td><td>${esc(p.location)}</td><td style="text-align:right">${actions(p)}</td></tr>`).join('')||'<tr><td colspan=6 class="hint">Nothing found.</td></tr>';
  const now=new Date();$('stTotal').textContent=db.length;$('stScans').textContent=scans;
- $('stMonth').textContent=db.filter(p=>{const d=new Date(p.added||0);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()}).length;
+ $('stMonth').textContent=db.filter(p=>(p.date_acquired||'').slice(0,7)===now.toISOString().slice(0,7)).length;
  $('stStore').textContent=Math.round(JSON.stringify(localStorage).length/1024)+' KB';
  bars('barsLoc',db.map(p=>p.location||'(none)'));bars('barsAcc',db.map(p=>p.accountable_person||'(none)'));
  bars('monthsChart',db.map(p=>p.date_acquired?p.date_acquired.slice(0,7):'(none)'),true)}
@@ -244,58 +224,16 @@ function parseCSV(t){const r=[];let row=[],f='',q=false;for(let i=0;i<t.length;i
  else if(c==='\n'||c==='\r'){if(c==='\r'&&t[i+1]==='\n')i++;row.push(f);r.push(row);row=[];f=''}else f+=c}
  if(f||row.length){row.push(f);r.push(row)}return r.filter(x=>x.some(y=>y.trim()))}
 $('importFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();
- rd.onload=()=>{const rows=parseCSV(rd.result);const h=rows.shift().map(x=>x.trim().toLowerCase());let n=0;
- rows.forEach(r=>{const p={};FIELDS.forEach(k=>p[k]=(r[h.indexOf(k)]||'').trim());
- if(p.property_no&&!db.some(x=>x.property_no===p.property_no)){p.added=Date.now();db.push(p);bumpCounter(p.property_no);n++}});
- save('ps_data',db);render();resetForm();alert(n+' imported.')};rd.readAsText(f);e.target.value=''};
-$('syncAll').onclick=()=>{if(!set.sheet)return alert('Paste the Google Sheet Web App URL in Settings first.');
- db.forEach((p,i)=>setTimeout(()=>sync(p),i*250));alert('Sending '+db.length+' properties to the sheet.')};
-
-// --- JSONP LOAD FROM SHEET (CORS FIX for Render) ---
-function loadSheet(silent){
- if(!set.sheet){if(!silent)alert('Paste the Web App URL in Settings first.');return}
- 
- const callbackName = 'jsonpCallback_' + Date.now();
- 
- window[callbackName] = function(rows) {
-  try {
-   if (!Array.isArray(rows)) throw 0;
-   let n = 0;
-   rows.forEach(r => {
-    const p = {};
-    FIELDS.forEach(k => p[k] = String(r[k] == null ? '' : r[k]).trim());
-    if (p.property_no && !db.some(x => x.property_no === p.property_no)) {
-     p.added = Date.now();
-     db.push(p);
-     bumpCounter(p.property_no);
-     n++;
-    }
-   });
-   if (n) save('ps_data', db);
-   if (!editing) $('fNo').value = nextNo();
-   render();
-   if (!silent) alert(n + ' loaded from the sheet.');
-  } catch (e) {
-   if (!silent) alert('Invalid data format from sheet.');
-  } finally {
-   delete window[callbackName];
-   if (scriptTag.parentNode) scriptTag.parentNode.removeChild(scriptTag);
-  }
- };
-
- const scriptTag = document.createElement('script');
- scriptTag.src = set.sheet + '?callback=' + callbackName;
- scriptTag.onerror = function() {
-  if (!silent) alert('Could not load from the sheet. Check the URL and network.');
-  delete window[callbackName];
-  if (scriptTag.parentNode) scriptTag.parentNode.removeChild(scriptTag);
- };
- document.body.appendChild(scriptTag);
-}
-
+ rd.onload=async()=>{const rows=parseCSV(rd.result);const h=rows.shift().map(x=>x.trim().toLowerCase());
+  const recs=rows.map(r=>{const p={};FIELDS.forEach(k=>p[k]=(r[h.indexOf(k)]||'').trim());return p}).filter(p=>p.property_no&&!db.some(x=>x.property_no===p.property_no));
+  try{if(recs.length)await api('saveMany',{records:recs});await loadSheet(true);alert(recs.length+' imported.')}catch(x){alert(x.message)}};
+ rd.readAsText(f);e.target.value=''};
+async function loadSheet(silent){
+ try{const j=await api('list');
+  db=j.rows.map(r=>{const p={};FIELDS.forEach(k=>p[k]=String(r[k]==null?'':r[k]).trim());return p}).filter(p=>p.property_no);
+  save('ps_data',db);if(!editing)$('fNo').value=nextNo();render();if(!silent)alert(db.length+' properties loaded from the sheet.')}
+ catch(x){if(!silent)alert(x.message)}}
 $('loadSheet').onclick=()=>loadSheet(false);
-$('wipe').onclick=()=>{$('wipeAsk').hidden=false};$('wipeNo').onclick=()=>{$('wipeAsk').hidden=true};
-$('wipeYes').onclick=()=>{db=[];save('ps_data',db);show(null);$('wipeAsk').hidden=true;resetForm();render()};
 
 // ---- settings ----
 const sm={sheet:'sSheet',line1:'sLine1',line2:'sLine2',sig0:'sSig0',sig1:'sSig1',sig2:'sSig2',prefix:'sPrefix',year:'sYear',digits:'sDigits',width:'sWidth'};
@@ -307,56 +245,8 @@ $('logoClear').onclick=()=>{set.logo='';save('ps_set',set);if(cur)show(cur)};
 function route(){const v=(location.hash||'#dashboard').slice(1);document.querySelectorAll('.view').forEach(s=>s.hidden=s.id!=='v-'+v);
  document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+v));render()}
 addEventListener('hashchange',route);
-
-// ---- LOGIN LOGIC ----
-function checkLogin() {
-  if (localStorage.getItem('ps_loggedin') === 'true') {
-    $('loginScreen').style.display = 'none';
-    $('mainNav').style.display = 'flex';
-    $('mainApp').style.display = 'block';
-    resetForm(); show(null); route(); loadSheet(true);
-  }
-}
-
-$('loginForm').onsubmit = async (e) => {
-  e.preventDefault();
-  const btn = $('logBtn');
-  const err = $('logErr');
-  btn.textContent = 'Checking...';
-  btn.disabled = true;
-  err.hidden = true;
-
-  const url = set.sheet; 
-  
-  try {
-    const res = await fetch(url, {
-      method: 'POST',
-      body: JSON.stringify({ action: 'login', username: $('logUser').value, password: $('logPass').value })
-    });
-    const data = await res.json();
-    
-    if (data.ok) {
-      localStorage.setItem('ps_loggedin', 'true');
-      $('loginScreen').style.display = 'none';
-      $('mainNav').style.display = 'flex';
-      $('mainApp').style.display = 'block';
-      resetForm(); show(null); route(); loadSheet(true);
-    } else {
-      err.textContent = data.error || 'Mali ang username o password.';
-      err.hidden = false;
-    }
-  } catch (error) {
-    err.textContent = 'Network error. Check your Google Sheet URL or Internet connection.';
-    err.hidden = false;
-  }
-  btn.textContent = 'Login'; btn.disabled = false;
-};
-
-function logout() {
-  localStorage.removeItem('ps_loggedin');
-  location.reload();
-}
-
-// Start the app
-checkLogin();
+$('lUrl').value=set.sheet||'';
+if(token){$('who').textContent=who;showLogin(false)}else{db=[];try{localStorage.removeItem('ps_data')}catch(e){}showLogin(true)}
+resetForm();show(null);route();
+if(token)loadSheet(true);
 </script></body></html>
